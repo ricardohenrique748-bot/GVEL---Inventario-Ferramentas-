@@ -239,7 +239,15 @@ export default function App() {
   };
 
   if (!currentUser) {
-    return <LockScreen people={people} onUnlock={setCurrentUser} />;
+    return (
+      <LockScreen
+        people={people}
+        onUnlock={(user) => {
+          setCurrentUser(user);
+          setCurrentPage('tool-requests');
+        }}
+      />
+    );
   }
 
   return (
