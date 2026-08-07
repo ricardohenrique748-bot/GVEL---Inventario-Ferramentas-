@@ -344,20 +344,25 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
                     >
                       {modelsState === 'loading' ? 'Carregando...' : 'Iniciar reconhecimento'}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedPersonId(people[0]?.id || '');
-                        setCapturedPhoto(null);
-                        setShowEnrollModal(true);
-                      }}
-                      className="w-full py-sm rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md font-semibold transition-colors border border-outline-variant flex items-center justify-center gap-xs"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
-                      Cadastrar biometria facial
-                    </button>
                   </div>
                 )}
+
+                {/* Enrollment button always visible */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCapturedPhoto(null);
+                    setEnrollName('');
+                    setEnrollRole('');
+                    setEnrollEmail('');
+                    setEnrollPassword('');
+                    setShowEnrollModal(true);
+                  }}
+                  className="w-full py-sm rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md font-semibold transition-colors border border-outline-variant flex items-center justify-center gap-xs"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
+                  Cadastrar biometria facial
+                </button>
               </div>
             )}
           </div>
