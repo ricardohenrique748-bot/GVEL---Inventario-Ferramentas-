@@ -20,6 +20,8 @@ import { AuditLogsView } from './components/AuditLogsView';
 import { SettingsView } from './components/SettingsView';
 import { QRScannerModal } from './components/QRScannerModal';
 
+import { supabase } from './lib/supabase';
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState<Person | null>(null);
   const [currentPage, setCurrentPage] = useState<PageId>('dashboard');
@@ -58,6 +60,54 @@ export default function App() {
     }
     return INITIAL_PEOPLE;
   });
+
+  // Supabase Data Sync Effect
+  useEffect(() => {
+    async function loadSupabaseData() {
+      try {
+        const { data: dbPeople } = await supabase.from('people').select('*');
+        if (dbPeople && dbPeople.length > 0) {
+          const mappedPeople: Person[] = dbPeople.map((p) => ({
+            id: p.id,
+            name: p.name,
+            registration: p.registration,
+            role: p.role,
+            sector: p.sector,
+            username: p.username,
+            email: p.email,
+            password: p.password,
+            active: p.active,
+            photoUrl: p.photo_url,
+          }));
+          setPeople(mappedPeople);
+        }
+
+        const { data: dbTools } = await supabase.from('tools').select('*');
+        if (dbTools && dbTools.length > 0) {
+          const mappedTools: ToolItem[] = dbTools.map((t) => ({
+            id: t.id,
+            code: t.code,
+            qrCode: t.qr_code,
+            name: t.name,
+            category: t.category,
+            brand: t.brand,
+            location: t.location,
+            status: t.status,
+            assignedTo: t.assigned_to,
+            assignedBay: t.assigned_bay,
+            assignedPhotoUrl: t.assigned_photo_url,
+            lastAuditDate: t.last_audit_date,
+            photoUrl: t.photo_url,
+          }));
+          setTools(mappedTools);
+        }
+      } catch (err) {
+        // Fallback to local data on offline or connection error
+      }
+    }
+
+    loadSupabaseData();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('toolcontrol-people', JSON.stringify(people));
