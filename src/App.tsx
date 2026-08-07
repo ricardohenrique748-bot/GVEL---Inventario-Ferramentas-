@@ -288,10 +288,25 @@ export default function App() {
     setCurrentPage('mechanic-boxes');
   };
 
+  const handleRegisterFace = async (personId: string, photoUrl: string) => {
+    setPeople((prev) =>
+      prev.map((p) => (p.id === personId ? { ...p, photoUrl } : p))
+    );
+
+    try {
+      await supabase.from('people').update({ photo_url: photoUrl }).eq('id', personId);
+    } catch (e) {
+      // fallback to local state
+    }
+
+    showToast('Biometria facial cadastrada com sucesso!');
+  };
+
   if (!currentUser) {
     return (
       <LockScreen
         people={people}
+        onRegisterFace={handleRegisterFace}
         onUnlock={(user) => {
           setCurrentUser(user);
           setCurrentPage('tool-requests');

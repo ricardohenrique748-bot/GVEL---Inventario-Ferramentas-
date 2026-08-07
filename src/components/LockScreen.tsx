@@ -2,10 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as faceapi from 'face-api.js';
 import { Person } from '../types';
 import logo from '../assets/logo.png';
+import { CameraCapture } from './CameraCapture';
 
 interface LockScreenProps {
   people: Person[];
   onUnlock: (person: Person) => void;
+  onRegisterFace?: (personId: string, photoUrl: string) => void;
 }
 
 type Tab = 'credentials' | 'facial';
@@ -15,7 +17,7 @@ const MODEL_URL = '/models';
 const MATCH_THRESHOLD = 0.55;
 const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
 
-export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
+export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegisterFace }) => {
   const [tab, setTab] = useState<Tab>('credentials');
 
   // Credentials tab state
@@ -28,6 +30,11 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [facialStatus, setFacialStatus] = useState<string | null>(null);
   const [matchedName, setMatchedName] = useState<string | null>(null);
+
+  // Facial Enrollment Modal State
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [selectedPersonId, setSelectedPersonId] = useState(people[0]?.id || '');
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -286,18 +293,110 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
                 )}
 
                 {!isScanning && !matchedName && (
-                  <button
-                    type="button"
-                    onClick={startFacialScan}
-                    disabled={modelsState === 'loading'}
-                    className="w-full py-sm rounded-full bg-error text-on-error font-label-md font-bold hover:bg-error/90 transition-colors disabled:opacity-50"
-                  >
-                    {modelsState === 'loading' ? 'Carregando...' : 'Iniciar reconhecimento'}
-                  </button>
+                  <div className="flex flex-col w-full gap-xs">
+                    <button
+                      type="button"
+                      onClick={startFacialScan}
+                      disabled={modelsState === 'loading'}
+                      className="w-full py-sm rounded-full bg-error text-on-error font-label-md font-bold hover:bg-error/90 transition-colors disabled:opacity-50"
+                    >
+                      {modelsState === 'loading' ? 'Carregando...' : 'Iniciar reconhecimento'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPersonId(people[0]?.id || '');
+                        setCapturedPhoto(null);
+                        setShowEnrollModal(true);
+                      }}
+                      className="w-full py-sm rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md font-semibold transition-colors border border-outline-variant flex items-center justify-center gap-xs"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
+                      Cadastrar biometria facial
+                    </button>
+                  </div>
                 )}
               </div>
             )}
           </div>
+
+          {/* Facial Registration Modal */}
+          {showEnrollModal && (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-md">
+              <div className="bg-surface-container rounded-2xl border border-outline-variant max-w-md w-full p-lg shadow-2xl animate-in zoom-in-95">
+                <div className="flex items-center justify-between pb-sm border-b border-outline-variant mb-md">
+                  <h3 className="font-headline-sm text-on-surface text-[17px] flex items-center gap-xs">
+                    <span className="material-symbols-outlined text-error">face</span>
+                    Cadastrar Biometria Facial
+                  </h3>
+                  <button
+                    onClick={() => setShowEnrollModal(false)}
+                    className="text-on-surface-variant hover:text-on-surface"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">close</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-md">
+                  <div>
+                    <label className="font-label-sm text-on-surface-variant mb-xs block">
+                      Selecione o Usuário
+                    </label>
+                    <select
+                      value={selectedPersonId}
+                      onChange={(e) => setSelectedPersonId(e.target.value)}
+                      className="w-full bg-surface-container-high border border-outline-variant rounded-xl p-sm text-body-md text-on-surface outline-none"
+                    >
+                      {people
+                        .filter((p) => p.active)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({p.role} - {p.email})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center py-xs">
+                    <CameraCapture
+                      value={capturedPhoto}
+                      onCapture={(url) => setCapturedPhoto(url)}
+                      onClear={() => setCapturedPhoto(null)}
+                      size={180}
+                    />
+                  </div>
+
+                  <div className="flex gap-sm pt-xs">
+                    <button
+                      type="button"
+                      onClick={() => setShowEnrollModal(false)}
+                      className="flex-1 py-sm rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!capturedPhoto || !selectedPersonId}
+                      onClick={() => {
+                        if (!selectedPersonId || !capturedPhoto) return;
+                        if (onRegisterFace) {
+                          onRegisterFace(selectedPersonId, capturedPhoto);
+                        }
+                        const targetPerson = people.find((p) => p.id === selectedPersonId);
+                        setShowEnrollModal(false);
+                        setFacialStatus(
+                          `Rosto cadastrado com sucesso para ${targetPerson?.name || 'usuário'}! Clique em Iniciar reconhecimento.`
+                        );
+                      }}
+                      className="flex-1 py-sm rounded-xl bg-error text-on-error font-label-md font-bold hover:bg-error/90 transition-colors disabled:opacity-50"
+                    >
+                      Salvar Biometria
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <p className="font-label-sm text-on-surface-variant text-center max-w-[26rem] mx-auto">
             Junte-se aos times que confiam no Inventário de Ferramentas para controlar o estoque, evitar perdas e
