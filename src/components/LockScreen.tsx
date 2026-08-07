@@ -33,9 +33,9 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
 
   // Facial Enrollment Modal State
   const [showEnrollModal, setShowEnrollModal] = useState(false);
-  const [selectedPersonId, setSelectedPersonId] = useState(people[0]?.id || '');
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [enrollName, setEnrollName] = useState('');
+  const [enrollRole, setEnrollRole] = useState('');
   const [enrollEmail, setEnrollEmail] = useState('');
   const [enrollPassword, setEnrollPassword] = useState('');
   const [enrollShowPass, setEnrollShowPass] = useState(false);
@@ -420,37 +420,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
                     )}
                   </div>
 
-                  {/* Divider */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-px bg-white/8" />
-                    <span className="text-white/30 text-[11px] uppercase tracking-widest font-semibold">Vincular a um usuário</span>
-                    <div className="flex-1 h-px bg-white/8" />
-                  </div>
-
-                  {/* Existing user selector */}
-                  <div className="bg-white/5 rounded-2xl p-3.5 border border-white/8">
-                    <p className="text-white/50 text-[11px] uppercase tracking-widest mb-2 font-semibold">Usuário existente</p>
-                    <select
-                      value={selectedPersonId}
-                      onChange={(e) => setSelectedPersonId(e.target.value)}
-                      className="w-full bg-transparent text-on-surface text-sm outline-none py-1 cursor-pointer"
-                    >
-                      {people.filter((p) => p.active).map((p) => (
-                        <option key={p.id} value={p.id} style={{ background: '#1a1a1a' }}>
-                          {p.name} — {p.role}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* OR create new */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-px bg-white/8" />
-                    <span className="text-white/30 text-[11px] uppercase tracking-widest font-semibold">ou criar novo</span>
-                    <div className="flex-1 h-px bg-white/8" />
-                  </div>
-
-                  {/* New user fields - all optional */}
+                  {/* User fields - all optional */}
                   <div className="flex flex-col gap-2.5">
                     {/* Name */}
                     <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/8 focus-within:border-error/50 transition-colors">
@@ -460,6 +430,18 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
                         placeholder="Nome completo (opcional)"
                         value={enrollName}
                         onChange={(e) => setEnrollName(e.target.value)}
+                        className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-white/25"
+                      />
+                    </div>
+
+                    {/* Função / Role */}
+                    <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/8 focus-within:border-error/50 transition-colors">
+                      <span className="material-symbols-outlined text-white/30 text-[18px]">badge</span>
+                      <input
+                        type="text"
+                        placeholder="Função (ex: Mecânico, Supervisor) (opcional)"
+                        value={enrollRole}
+                        onChange={(e) => setEnrollRole(e.target.value)}
                         className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-white/25"
                       />
                     </div>
@@ -512,18 +494,18 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
                       disabled={!capturedPhoto}
                       onClick={() => {
                         if (!capturedPhoto) return;
-                        const targetId = selectedPersonId || people[0]?.id;
+                        const targetId = people[0]?.id;
                         if (onRegisterFace && targetId) {
                           onRegisterFace(targetId, capturedPhoto);
                         }
-                        const targetPerson = people.find((p) => p.id === targetId);
                         setShowEnrollModal(false);
                         setCapturedPhoto(null);
                         setEnrollName('');
+                        setEnrollRole('');
                         setEnrollEmail('');
                         setEnrollPassword('');
                         setFacialStatus(
-                          `Biometria cadastrada para ${enrollName || targetPerson?.name || 'usuário'}! Clique em Iniciar reconhecimento.`
+                          `Biometria cadastrada para ${enrollName || 'novo usuário'}! Clique em Iniciar reconhecimento.`
                         );
                       }}
                       className="flex-[2] py-3 rounded-2xl bg-error hover:bg-error/90 text-white text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-error/20"
