@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 @theme {
   /* Spacing scale — named sizes used throughout the app (p-lg, gap-sm, etc).
      Tailwind v4 has no built-in named spacing scale, so these must be

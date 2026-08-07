@@ -190,16 +190,16 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
 
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#0d0d0d] p-4 sm:p-6 md:p-8 box-border">
+    <div className="min-h-screen w-full flex flex-col justify-center items-stretch bg-[#0d0d0d] p-3 sm:p-6 md:p-8 box-border">
       {/* Background ambient lighting */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-red-900/10 rounded-full blur-[90px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md lg:max-w-5xl bg-[#141414] rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col lg:flex-row my-auto">
+      <div className="relative z-10 w-full max-w-md lg:max-w-5xl mx-auto bg-[#141414] rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col lg:flex-row my-auto" style={{ width: '100%' }}>
         {/* Left: auth panel */}
-        <div className="w-full lg:w-1/2 flex flex-col p-5 sm:p-8 md:p-10 justify-between box-border">
+        <div className="w-full lg:w-1/2 flex flex-col p-5 sm:p-8 md:p-10 justify-between box-border" style={{ width: '100%' }}>
           {/* Header Branding */}
           <div className="flex flex-col items-center justify-center text-center gap-2 mb-4 sm:mb-6">
             <div className="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-2.5 shadow-lg">
@@ -211,7 +211,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col justify-center w-full max-w-sm mx-auto my-2">
+          <div className="flex-1 flex flex-col justify-center w-full mx-auto my-2 box-border">
             <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight text-center tracking-tight">
               Reconhecimento Facial
             </h1>
