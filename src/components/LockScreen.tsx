@@ -190,246 +190,298 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
 
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background p-lg">
-      <div className="w-full max-w-[68rem] bg-surface-container rounded-[28px] border border-outline-variant/30 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 animate-in zoom-in-95">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0d0d0d] p-3 sm:p-6 md:p-8">
+      {/* Background ambient lighting */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-red-900/10 rounded-full blur-[90px]" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-5xl bg-[#141414] rounded-3xl border border-white/10 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 my-auto">
         {/* Left: auth panel */}
-        <div className="flex flex-col p-2xl">
-          <div className="flex flex-col items-center justify-center text-center gap-xs mb-2">
-            <img src={logo} alt="Inventario Ferramentas - GV" className="w-14 h-14 object-contain" />
-            <span className="font-headline-sm text-on-surface font-bold">Inventario Ferramentas - GV</span>
+        <div className="flex flex-col p-6 sm:p-8 md:p-10 justify-between">
+          {/* Header Branding */}
+          <div className="flex flex-col items-center justify-center text-center gap-2 mb-4 sm:mb-6">
+            <div className="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-2.5 shadow-lg">
+              <img src={logo} alt="Inventario Ferramentas - GV" className="w-full h-full object-contain" />
+            </div>
+            <div className="mt-1">
+              <h2 className="text-white font-extrabold text-lg sm:text-xl tracking-tight">Inventario Ferramentas - GV</h2>
+              <span className="text-red-500 text-[10px] uppercase font-bold tracking-[3px] block">Sistema de Gestão Industrial</span>
+            </div>
           </div>
 
-          <div className="flex-1 flex flex-col justify-center w-full max-w-[22rem] mx-auto py-xl">
-            <h1 className="font-display-lg text-on-surface leading-tight text-center">Bem-vindo de volta</h1>
-            <p className="font-body-sm text-on-surface-variant mt-xs mb-lg text-center">
-              Use o reconhecimento facial para entrar.
+          <div className="flex-1 flex flex-col justify-center w-full max-w-sm mx-auto my-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight text-center tracking-tight">
+              Reconhecimento Facial
+            </h1>
+            <p className="text-xs sm:text-sm text-white/50 mt-1.5 mb-6 text-center">
+              Posicione o rosto em frente à câmera para acessar o sistema.
             </p>
 
-            <div className="flex flex-col items-center gap-md">
+            <div className="flex flex-col items-center gap-5">
+              {/* Biometric Camera Viewfinder with Corner Brackets & Scanner HUD */}
               <div
-                className={`w-48 h-48 rounded-2xl bg-surface-container-high border-2 flex items-center justify-center overflow-hidden relative ${
-                  matchedName ? 'border-error' : 'border-dashed border-outline-variant'
+                className={`relative w-48 h-48 sm:w-56 sm:h-56 rounded-3xl bg-black/60 border-2 transition-all duration-300 flex items-center justify-center overflow-hidden shadow-2xl ${
+                  matchedName
+                    ? 'border-emerald-500 shadow-emerald-500/20'
+                    : isScanning
+                    ? 'border-red-500 shadow-red-500/25 ring-4 ring-red-500/10'
+                    : 'border-white/15'
                 }`}
               >
+                {/* HUD Corner Brackets */}
+                <div className="absolute top-2.5 left-2.5 w-4 h-4 border-t-2 border-l-2 border-red-500 z-20 pointer-events-none" />
+                <div className="absolute top-2.5 right-2.5 w-4 h-4 border-t-2 border-r-2 border-red-500 z-20 pointer-events-none" />
+                <div className="absolute bottom-2.5 left-2.5 w-4 h-4 border-b-2 border-l-2 border-red-500 z-20 pointer-events-none" />
+                <div className="absolute bottom-2.5 right-2.5 w-4 h-4 border-b-2 border-r-2 border-red-500 z-20 pointer-events-none" />
+
+                {/* Laser scan line animation while scanning */}
+                {isScanning && (
+                  <div
+                    className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent z-20 shadow-[0_0_15px_#ef4444]"
+                    style={{ animation: 'gv-scan-laser 2s linear infinite' }}
+                  />
+                )}
+
                 <video
                   ref={videoRef}
                   className={`w-full h-full object-cover -scale-x-100 ${isScanning ? '' : 'hidden'}`}
                   muted
                   playsInline
                 />
+
                 {!isScanning && (
-                  <span className="material-symbols-outlined text-on-surface-variant text-[36px]">
-                    {matchedName ? 'check_circle' : 'face'}
-                  </span>
+                  <div className="flex flex-col items-center gap-2 p-4 text-center z-10">
+                    {matchedName ? (
+                      <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                        <span className="material-symbols-outlined text-[36px]">check_circle</span>
+                      </div>
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40">
+                        <span className="material-symbols-outlined text-[36px]">face</span>
+                      </div>
+                    )}
+                    <span className="text-white/40 text-xs">
+                      {matchedName ? matchedName : 'Aguardando câmera...'}
+                    </span>
+                  </div>
                 )}
               </div>
 
+              {/* Status Message Display */}
               {facialStatus && (
-                <p
-                  className={`font-label-sm text-center ${
-                    matchedName ? 'text-error font-bold' : 'text-on-surface-variant'
-                  }`}
-                >
+                <div className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm text-center font-medium w-full max-w-xs transition-all ${
+                  matchedName 
+                    ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold' 
+                    : isScanning 
+                    ? 'bg-red-500/10 border border-red-500/20 text-red-400 animate-pulse'
+                    : 'bg-white/5 border border-white/10 text-white/70'
+                }`}>
                   {facialStatus}
-                </p>
+                </div>
               )}
 
-              {!isScanning && !matchedName && (
-                <div className="flex flex-col w-full gap-xs">
+              {/* Action Buttons */}
+              <div className="flex flex-col w-full gap-3 mt-1">
+                {!isScanning && !matchedName && (
                   <button
                     type="button"
                     onClick={startFacialScan}
                     disabled={modelsState === 'loading'}
-                    className="w-full py-sm rounded-full bg-error text-on-error font-label-md font-bold hover:bg-error/90 transition-colors disabled:opacity-50"
+                    className="w-full py-3.5 px-6 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-all shadow-lg shadow-red-600/25 active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {modelsState === 'loading' ? 'Carregando...' : 'Iniciar reconhecimento'}
+                    <span className="material-symbols-outlined text-[20px]">videocam</span>
+                    {modelsState === 'loading' ? 'Carregando Modelos IA...' : 'Iniciar Reconhecimento'}
                   </button>
-                </div>
-              )}
+                )}
 
-              {/* Enrollment button always visible */}
-              <button
-                type="button"
-                onClick={() => {
-                  setCapturedPhoto(null);
-                  setEnrollName('');
-                  setEnrollRole('');
-                  setEnrollEmail('');
-                  setEnrollPassword('');
-                  setShowEnrollModal(true);
-                }}
-                className="w-full py-sm rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md font-semibold transition-colors border border-outline-variant flex items-center justify-center gap-xs"
-              >
-                <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
-                Cadastrar biometria facial
-              </button>
+                {/* Enrollment button always visible */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCapturedPhoto(null);
+                    setEnrollName('');
+                    setEnrollRole('');
+                    setEnrollEmail('');
+                    setEnrollPassword('');
+                    setShowEnrollModal(true);
+                  }}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-white text-sm font-semibold transition-all border border-white/10 active:scale-[0.99] flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[20px] text-red-500">add_a_photo</span>
+                  Cadastrar Biometria Facial
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Facial Registration Modal */}
-          {showEnrollModal && (
-            <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-end sm:items-center justify-center">
-              <div className="bg-[#1a1a1a] w-full sm:max-w-md sm:mx-4 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" style={{ maxHeight: '92vh', overflowY: 'auto' }}>
-                {/* Header */}
-                <div className="relative flex items-center justify-center pt-5 pb-3 px-5 border-b border-white/8">
-                  <div className="absolute left-5 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-on-surface-variant text-[18px]">face</span>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-label-sm text-on-surface-variant text-xs uppercase tracking-widest mb-0.5">Cadastro</p>
-                    <h3 className="font-headline-sm text-on-surface text-base font-bold">Biometria Facial</h3>
-                  </div>
-                  <button
-                    onClick={() => setShowEnrollModal(false)}
-                    className="absolute right-5 w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 flex items-center justify-center transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-on-surface-variant text-[16px]">close</span>
-                  </button>
-                </div>
-
-                <div className="p-5 flex flex-col gap-4">
-                  {/* Camera capture centered */}
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="relative">
-                      <div className={`w-36 h-36 rounded-2xl overflow-hidden border-2 transition-all ${capturedPhoto ? 'border-error shadow-lg shadow-error/20' : 'border-dashed border-white/20'} bg-white/5 flex items-center justify-center`}>
-                        {capturedPhoto ? (
-                          <img src={capturedPhoto} alt="Foto facial" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="flex flex-col items-center gap-1.5">
-                            <span className="material-symbols-outlined text-white/20 text-[40px]">face_4</span>
-                            <p className="text-white/30 text-[10px] text-center px-2">Toque para fotografar</p>
-                          </div>
-                        )}
-                      </div>
-                      {capturedPhoto && (
-                        <button
-                          type="button"
-                          onClick={() => setCapturedPhoto(null)}
-                          className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-error rounded-full flex items-center justify-center shadow-md"
-                        >
-                          <span className="material-symbols-outlined text-white text-[13px]">close</span>
-                        </button>
-                      )}
-                    </div>
-                    <CameraCapture
-                      value={capturedPhoto}
-                      onCapture={(url) => setCapturedPhoto(url)}
-                      onClear={() => setCapturedPhoto(null)}
-                      size={0}
-                    />
-                    {capturedPhoto ? (
-                      <p className="text-xs text-error font-semibold">✓ Rosto capturado</p>
-                    ) : (
-                      <p className="text-xs text-white/40 text-center">A foto do rosto é necessária para o reconhecimento</p>
-                    )}
-                  </div>
-
-                  {/* User fields - all optional */}
-                  <div className="flex flex-col gap-2.5">
-                    {/* Name */}
-                    <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/8 focus-within:border-error/50 transition-colors">
-                      <span className="material-symbols-outlined text-white/30 text-[18px]">person</span>
-                      <input
-                        type="text"
-                        placeholder="Nome completo (opcional)"
-                        value={enrollName}
-                        onChange={(e) => setEnrollName(e.target.value)}
-                        className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-white/25"
-                      />
-                    </div>
-
-                    {/* Função / Role */}
-                    <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/8 focus-within:border-error/50 transition-colors">
-                      <span className="material-symbols-outlined text-white/30 text-[18px]">badge</span>
-                      <input
-                        type="text"
-                        placeholder="Função (ex: Mecânico, Supervisor) (opcional)"
-                        value={enrollRole}
-                        onChange={(e) => setEnrollRole(e.target.value)}
-                        className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-white/25"
-                      />
-                    </div>
-
-                    {/* Email */}
-                    <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/8 focus-within:border-error/50 transition-colors">
-                      <span className="material-symbols-outlined text-white/30 text-[18px]">mail</span>
-                      <input
-                        type="email"
-                        placeholder="E-mail (opcional)"
-                        value={enrollEmail}
-                        onChange={(e) => setEnrollEmail(e.target.value)}
-                        className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-white/25"
-                      />
-                    </div>
-
-                    {/* Password */}
-                    <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/8 focus-within:border-error/50 transition-colors">
-                      <span className="material-symbols-outlined text-white/30 text-[18px]">lock</span>
-                      <input
-                        type={enrollShowPass ? 'text' : 'password'}
-                        placeholder="Senha (opcional)"
-                        value={enrollPassword}
-                        onChange={(e) => setEnrollPassword(e.target.value)}
-                        className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-white/25"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setEnrollShowPass(!enrollShowPass)}
-                        className="text-white/30 hover:text-white/60 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">
-                          {enrollShowPass ? 'visibility_off' : 'visibility'}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="flex gap-2.5 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setShowEnrollModal(false)}
-                      className="flex-1 py-3 rounded-2xl bg-white/8 hover:bg-white/12 text-on-surface-variant text-sm font-semibold transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!capturedPhoto}
-                      onClick={() => {
-                        if (!capturedPhoto) return;
-                        const targetId = people[0]?.id;
-                        if (onRegisterFace && targetId) {
-                          onRegisterFace(targetId, capturedPhoto);
-                        }
-                        setShowEnrollModal(false);
-                        setCapturedPhoto(null);
-                        setEnrollName('');
-                        setEnrollRole('');
-                        setEnrollEmail('');
-                        setEnrollPassword('');
-                        setFacialStatus(
-                          `Biometria cadastrada para ${enrollName || 'novo usuário'}! Clique em Iniciar reconhecimento.`
-                        );
-                      }}
-                      className="flex-[2] py-3 rounded-2xl bg-error hover:bg-error/90 text-white text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-error/20"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">face_unlock</span>
-                      Salvar Biometria
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <p className="font-label-sm text-on-surface-variant text-center max-w-[26rem] mx-auto">
-            Junte-se aos times que confiam no Inventário de Ferramentas para controlar o estoque, evitar perdas e
-            sempre saber quem está com cada ferramenta.
+          {/* Footer note */}
+          <p className="text-[11px] text-white/30 text-center max-w-xs mx-auto mt-6">
+            Inventário de Ferramentas GVEL — Controle e segurança de ativos industriais.
           </p>
         </div>
 
-        {/* Right: brand panel */}
+        {/* Facial Registration Modal */}
+        {showEnrollModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div className="bg-[#181818] w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6 sm:zoom-in-95 max-h-[92vh] overflow-y-auto">
+              {/* Header */}
+              <div className="relative flex items-center justify-center pt-5 pb-3.5 px-5 border-b border-white/10 bg-white/[0.02]">
+                <div className="absolute left-5 w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
+                  <span className="material-symbols-outlined text-[18px]">face</span>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] text-white/40 uppercase tracking-widest font-semibold">Novo Cadastro</p>
+                  <h3 className="text-white text-base font-bold">Biometria Facial</h3>
+                </div>
+                <button
+                  onClick={() => setShowEnrollModal(false)}
+                  className="absolute right-5 w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/60 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              </div>
+
+              <div className="p-5 flex flex-col gap-4">
+                {/* Camera capture centered */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="relative">
+                    <div className={`w-36 h-36 rounded-2xl overflow-hidden border-2 transition-all ${capturedPhoto ? 'border-red-500 shadow-lg shadow-red-500/20' : 'border-dashed border-white/20'} bg-white/5 flex items-center justify-center`}>
+                      {capturedPhoto ? (
+                        <img src={capturedPhoto} alt="Foto facial" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center gap-1.5">
+                          <span className="material-symbols-outlined text-white/20 text-[40px]">face_4</span>
+                          <p className="text-white/30 text-[10px] text-center px-2">Toque para fotografar</p>
+                        </div>
+                      )}
+                    </div>
+                    {capturedPhoto && (
+                      <button
+                        type="button"
+                        onClick={() => setCapturedPhoto(null)}
+                        className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center shadow-md text-white"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">close</span>
+                      </button>
+                    )}
+                  </div>
+                  <CameraCapture
+                    value={capturedPhoto}
+                    onCapture={(url) => setCapturedPhoto(url)}
+                    onClear={() => setCapturedPhoto(null)}
+                    size={0}
+                  />
+                  {capturedPhoto ? (
+                    <p className="text-xs text-red-400 font-semibold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">check_circle</span> Rosto capturado
+                    </p>
+                  ) : (
+                    <p className="text-xs text-white/40 text-center">A foto do rosto é obrigatória para a biometria</p>
+                  )}
+                </div>
+
+                {/* User fields - all optional */}
+                <div className="flex flex-col gap-2.5">
+                  {/* Name */}
+                  <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-red-500/60 transition-colors">
+                    <span className="material-symbols-outlined text-white/30 text-[18px]">person</span>
+                    <input
+                      type="text"
+                      placeholder="Nome completo (opcional)"
+                      value={enrollName}
+                      onChange={(e) => setEnrollName(e.target.value)}
+                      className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
+                    />
+                  </div>
+
+                  {/* Função / Role */}
+                  <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-red-500/60 transition-colors">
+                    <span className="material-symbols-outlined text-white/30 text-[18px]">badge</span>
+                    <input
+                      type="text"
+                      placeholder="Função (ex: Mecânico, Supervisor) (opcional)"
+                      value={enrollRole}
+                      onChange={(e) => setEnrollRole(e.target.value)}
+                      className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-red-500/60 transition-colors">
+                    <span className="material-symbols-outlined text-white/30 text-[18px]">mail</span>
+                    <input
+                      type="email"
+                      placeholder="E-mail (opcional)"
+                      value={enrollEmail}
+                      onChange={(e) => setEnrollEmail(e.target.value)}
+                      className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
+                    />
+                  </div>
+
+                  {/* Password */}
+                  <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-red-500/60 transition-colors">
+                    <span className="material-symbols-outlined text-white/30 text-[18px]">lock</span>
+                    <input
+                      type={enrollShowPass ? 'text' : 'password'}
+                      placeholder="Senha (opcional)"
+                      value={enrollPassword}
+                      onChange={(e) => setEnrollPassword(e.target.value)}
+                      className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setEnrollShowPass(!enrollShowPass)}
+                      className="text-white/30 hover:text-white/60 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        {enrollShowPass ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowEnrollModal(false)}
+                    className="flex-1 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white/70 text-sm font-semibold transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!capturedPhoto}
+                    onClick={() => {
+                      if (!capturedPhoto) return;
+                      const targetId = people[0]?.id;
+                      if (onRegisterFace && targetId) {
+                        onRegisterFace(targetId, capturedPhoto);
+                      }
+                      setShowEnrollModal(false);
+                      setCapturedPhoto(null);
+                      setEnrollName('');
+                      setEnrollRole('');
+                      setEnrollEmail('');
+                      setEnrollPassword('');
+                      setFacialStatus(
+                        `Biometria cadastrada para ${enrollName || 'novo usuário'}! Clique em Iniciar reconhecimento.`
+                      );
+                    }}
+                    className="flex-[2] py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-red-600/20"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">face_unlock</span>
+                    Salvar Biometria
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Right: brand panel (shown on tablets landscape and desktops) */}
         <div className="hidden lg:flex relative items-center justify-center overflow-hidden bg-gradient-to-br from-[#0a0a0a] via-[#160505] to-[#2a0808]">
           <style>{`
             @keyframes gv-glow-shift {
@@ -445,22 +497,21 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
               0%, 100% { transform: translateY(0px); }
               50% { transform: translateY(-10px); }
             }
-            @keyframes gv-scan {
-              0% { transform: translateY(-120%); opacity: 0; }
-              10% { opacity: 1; }
-              90% { opacity: 1; }
-              100% { transform: translateY(120%); opacity: 0; }
+            @keyframes gv-scan-laser {
+              0% { top: 0%; opacity: 0.2; }
+              50% { opacity: 1; }
+              100% { top: 100%; opacity: 0.2; }
             }
           `}</style>
 
-          {/* Ambient red glow, slowly pulsing */}
+          {/* Ambient red glow */}
           <div
-            className="absolute w-96 h-96 rounded-full bg-error/40 blur-3xl"
+            className="absolute w-96 h-96 rounded-full bg-red-600/30 blur-3xl"
             style={{ animation: 'gv-glow-shift 5s ease-in-out infinite' }}
           />
 
-          {/* Decorative dashed columns */}
-          <div className="absolute inset-0 flex justify-between px-2xl opacity-10 pointer-events-none">
+          {/* Decorative vertical dashed lines */}
+          <div className="absolute inset-0 flex justify-between px-12 opacity-10 pointer-events-none">
             {Array.from({ length: 7 }).map((_, i) => (
               <div
                 key={i}
@@ -473,28 +524,24 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
             ))}
           </div>
 
-          {/* Scanning light sweep */}
-          <div
-            className="absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-error/25 to-transparent pointer-events-none"
-            style={{ animation: 'gv-scan 4s ease-in-out infinite' }}
-          />
-
-          <div className="relative z-10 flex flex-col items-center gap-lg px-2xl">
+          <div className="relative z-10 flex flex-col items-center gap-6 px-10 text-center">
             <div
-              className="w-40 h-40 rounded-[28px] bg-black/40 border border-error/40 flex items-center justify-center shadow-2xl"
-              style={{ animation: 'gv-pulse-ring 2.8s ease-in-out infinite' }}
+              className="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-black/50 border border-red-500/40 flex items-center justify-center shadow-2xl backdrop-blur-sm"
+              style={{ animation: 'gv-pulse-ring 3s ease-in-out infinite' }}
             >
               <img
                 src={logo}
-                alt=""
-                className="w-24 h-24 object-contain drop-shadow-2xl"
+                alt="GVEL"
+                className="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-2xl"
                 style={{ animation: 'gv-float 4s ease-in-out infinite' }}
               />
             </div>
-            <div className="text-center">
-              <p className="font-headline-sm text-white">Controle total da sua oficina</p>
-              <p className="font-body-sm text-white/70 mt-xs">
-                Ferramentas, empréstimos e auditorias em um só lugar.
+            <div>
+              <h3 className="text-white text-xl sm:text-2xl font-extrabold tracking-tight">
+                Controle Total de Ferramentas
+              </h3>
+              <p className="text-white/60 text-xs sm:text-sm mt-2 max-w-xs mx-auto leading-relaxed">
+                Gestão de estoque industrial, empréstimos biométricos e auditoria em tempo real.
               </p>
             </div>
           </div>
