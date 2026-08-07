@@ -13,7 +13,7 @@ interface LockScreenProps {
 type Tab = 'credentials' | 'facial';
 type ModelsState = 'idle' | 'loading' | 'ready' | 'error';
 
-const MODEL_URL = '/models';
+const MODEL_URL = '/models/';
 const MATCH_THRESHOLD = 0.55;
 const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
 
@@ -69,30 +69,32 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
   const ensureModelsLoaded = async () => {
     if (modelsState === 'ready') return true;
     setModelsState('loading');
-    try {
-      await Promise.all([
-        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-        faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-      ]);
-      setModelsState('ready');
-      return true;
-    } catch (e1) {
-      console.warn('Erro ao carregar modelos via /models, tentando ./models:', e1);
+
+    const candidateUris = [
+      '/models/',
+      './models/',
+      `${window.location.origin}/models/`,
+      'https://justadudewhohacks.github.io/face-api.js/models/',
+      'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/',
+    ];
+
+    for (const uri of candidateUris) {
       try {
+        console.log(`Carregando modelos de IA de: ${uri}`);
         await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
-          faceapi.nets.faceLandmark68TinyNet.loadFromUri('./models'),
-          faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
+          faceapi.nets.tinyFaceDetector.loadFromUri(uri),
+          faceapi.nets.faceLandmark68TinyNet.loadFromUri(uri),
+          faceapi.nets.faceRecognitionNet.loadFromUri(uri),
         ]);
         setModelsState('ready');
         return true;
-      } catch (e2) {
-        console.error('Falha ao carregar modelos de IA facial:', e2);
-        setModelsState('error');
-        return false;
+      } catch (err) {
+        console.warn(`Tentativa de carregar modelos de ${uri} falhou:`, err);
       }
     }
+
+    setModelsState('error');
+    return false;
   };
 
   const buildMatcher = async () => {
