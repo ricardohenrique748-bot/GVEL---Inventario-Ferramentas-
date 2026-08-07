@@ -56,6 +56,16 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
 
   useEffect(() => stopScanning, []);
 
+  const loadImageElement = (url: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = (err) => reject(err);
+      img.src = url;
+    });
+  };
+
   const ensureModelsLoaded = async () => {
     if (modelsState === 'ready') return true;
     setModelsState('loading');
@@ -67,9 +77,21 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
       ]);
       setModelsState('ready');
       return true;
-    } catch {
-      setModelsState('error');
-      return false;
+    } catch (e1) {
+      console.warn('Erro ao carregar modelos via /models, tentando ./models:', e1);
+      try {
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
+          faceapi.nets.faceLandmark68TinyNet.loadFromUri('./models'),
+          faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
+        ]);
+        setModelsState('ready');
+        return true;
+      } catch (e2) {
+        console.error('Falha ao carregar modelos de IA facial:', e2);
+        setModelsState('error');
+        return false;
+      }
     }
   };
 
@@ -77,16 +99,23 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
     const labeled: faceapi.LabeledFaceDescriptors[] = [];
     for (const person of enrolledPeople) {
       try {
-        const img = await faceapi.fetchImage(person.photoUrl!);
+        let img: HTMLImageElement;
+        if (person.photoUrl?.startsWith('data:') || person.photoUrl?.startsWith('blob:')) {
+          img = await loadImageElement(person.photoUrl);
+        } else {
+          img = await faceapi.fetchImage(person.photoUrl!);
+        }
+
         const detection = await faceapi
           .detectSingleFace(img, DETECTOR_OPTIONS)
           .withFaceLandmarks(true)
           .withFaceDescriptor();
+
         if (detection) {
           labeled.push(new faceapi.LabeledFaceDescriptors(person.id, [detection.descriptor]));
         }
-      } catch {
-        // Skip people whose registered photo doesn't yield a usable face.
+      } catch (err) {
+        console.error(`Erro ao extrair descritor facial de ${person.name}:`, err);
       }
     }
     matcherRef.current = labeled.length > 0 ? new faceapi.FaceMatcher(labeled, MATCH_THRESHOLD) : null;
@@ -120,27 +149,33 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
 
   const startFacialScan = async () => {
     setCredError(null);
-    setFacialStatus('Carregando modelos de reconhecimento facial...');
-    const loaded = await ensureModelsLoaded();
-    if (!loaded) {
-      setFacialStatus('Não foi possível carregar o reconhecimento facial.');
+
+    if (enrolledPeople.length === 0) {
+      setFacialStatus('Nenhuma biometria cadastrada ainda. Clique no botão "Cadastrar biometria facial" abaixo.');
       return;
     }
 
-    if (enrolledPeople.length === 0) {
-      setFacialStatus('Nenhum rosto cadastrado ainda. Peça para cadastrar seu rosto em Configurações ou use email e senha.');
+    setFacialStatus('Carregando modelos de reconhecimento facial...');
+    const loaded = await ensureModelsLoaded();
+    if (!loaded) {
+      setFacialStatus('Não foi possível carregar os modelos de inteligência artificial facial.');
       return;
     }
 
     setFacialStatus('Preparando reconhecimento facial...');
     await buildMatcher();
     if (!matcherRef.current) {
-      setFacialStatus('Não foi possível processar os rostos cadastrados. Tente cadastrar a foto novamente.');
+      setFacialStatus('Rosto cadastrado não detectado na foto. Clique em "Cadastrar biometria facial" para atualizar sua foto.');
       return;
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -150,8 +185,9 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
       setIsScanning(true);
       setFacialStatus('Procurando rosto...');
       intervalRef.current = setInterval(runDetectionTick, 900);
-    } catch {
-      setFacialStatus('Não foi possível acessar a câmera. Verifique as permissões do navegador.');
+    } catch (err) {
+      console.error('Erro ao acessar câmera:', err);
+      setFacialStatus('Não foi possível acessar a câmera. Verifique as permissões de câmera do dispositivo.');
     }
   };
 
