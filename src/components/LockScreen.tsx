@@ -190,16 +190,16 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
 
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#0d0d0d] p-3 sm:p-6 md:p-8">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#0d0d0d] p-4 sm:p-6 md:p-8 box-border">
       {/* Background ambient lighting */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-red-900/10 rounded-full blur-[90px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-5xl bg-[#141414] rounded-3xl border border-white/10 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 my-auto">
+      <div className="relative z-10 w-full max-w-md lg:max-w-5xl bg-[#141414] rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col lg:flex-row my-auto">
         {/* Left: auth panel */}
-        <div className="flex flex-col p-6 sm:p-8 md:p-10 justify-between">
+        <div className="w-full lg:w-1/2 flex flex-col p-5 sm:p-8 md:p-10 justify-between box-border">
           {/* Header Branding */}
           <div className="flex flex-col items-center justify-center text-center gap-2 mb-4 sm:mb-6">
             <div className="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-2.5 shadow-lg">
@@ -482,7 +482,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
         )}
 
         {/* Right: brand panel (shown on tablets landscape and desktops) */}
-        <div className="hidden lg:flex relative items-center justify-center overflow-hidden bg-gradient-to-br from-[#0a0a0a] via-[#160505] to-[#2a0808]">
+        <div className="hidden lg:flex lg:w-1/2 min-h-[500px] relative items-center justify-center overflow-hidden bg-gradient-to-br from-[#0a0a0a] via-[#160505] to-[#2a0808]">
           <style>{`
             @keyframes gv-glow-shift {
               0%, 100% { opacity: 0.35; transform: scale(1); }
