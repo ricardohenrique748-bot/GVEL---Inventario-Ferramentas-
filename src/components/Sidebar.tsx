@@ -32,7 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <img src={logo} alt="Center Truck" className="w-full h-full object-contain" />
         </div>
         <span className="text-[13px] text-on-surface tracking-tight font-semibold whitespace-nowrap">
-          Inventário de Ferramentas
+          Inventario Ferramentas - GV
         </span>
       </div>
 

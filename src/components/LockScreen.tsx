@@ -182,8 +182,8 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
         {/* Left: auth panel */}
         <div className="flex flex-col p-2xl">
           <div className="flex flex-col items-center justify-center text-center gap-xs mb-2">
-            <img src={logo} alt="Inventário de Ferramentas" className="w-14 h-14 object-contain" />
-            <span className="font-headline-sm text-on-surface font-bold">Inventário de Ferramentas</span>
+            <img src={logo} alt="Inventario Ferramentas - GV" className="w-14 h-14 object-contain" />
+            <span className="font-headline-sm text-on-surface font-bold">Inventario Ferramentas - GV</span>
           </div>
 
           <div className="flex-1 flex flex-col justify-center w-full max-w-[22rem] mx-auto py-xl">
