@@ -10,6 +10,7 @@ import {
 
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
+import { SplashScreen } from './components/SplashScreen';
 import { LockScreen } from './components/LockScreen';
 import { DashboardView } from './components/DashboardView';
 import { EstoqueView } from './components/EstoqueView';
@@ -24,6 +25,7 @@ import { supabase } from './lib/supabase';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<Person | null>(null);
+  const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<PageId>('dashboard');
   const [showScanner, setShowScanner] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(
@@ -301,6 +303,10 @@ export default function App() {
 
     showToast('Biometria facial cadastrada com sucesso!');
   };
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
 
   if (!currentUser) {
     return (

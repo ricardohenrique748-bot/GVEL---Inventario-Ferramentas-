@@ -10,7 +10,6 @@ interface LockScreenProps {
   onRegisterFace?: (personId: string, photoUrl: string) => void;
 }
 
-type Tab = 'credentials' | 'facial';
 type ModelsState = 'idle' | 'loading' | 'ready' | 'error';
 
 const MODEL_URL = '/models/';
@@ -18,13 +17,6 @@ const MATCH_THRESHOLD = 0.55;
 const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
 
 export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegisterFace }) => {
-  const [tab, setTab] = useState<Tab>('credentials');
-
-  // Credentials tab state
-  const [email, setEmail] = useState('ricardo_h.16@hotmail.com');
-  const [password, setPassword] = useState('');
-  const [credError, setCredError] = useState<string | null>(null);
-
   // Facial tab state
   const [modelsState, setModelsState] = useState<ModelsState>('idle');
   const [isScanning, setIsScanning] = useState(false);
@@ -197,33 +189,6 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
     }
   };
 
-  const handleCredentialsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCredError(null);
-    const search = email.trim().toLowerCase();
-    const cleanPass = password.trim();
-
-    const match = people.find(
-      (p) =>
-        p.active &&
-        (p.email.trim().toLowerCase() === search || p.username.trim().toLowerCase() === search) &&
-        p.password.trim() === cleanPass
-    );
-
-    if (!match) {
-      setCredError('Email ou senha incorretos.');
-      return;
-    }
-    onUnlock(match);
-  };
-
-  const switchTab = (next: Tab) => {
-    if (tab === 'facial' && next !== 'facial') stopScanning();
-    setCredError(null);
-    setFacialStatus(null);
-    setMatchedName(null);
-    setTab(next);
-  };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-lg">
@@ -238,133 +203,68 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
           <div className="flex-1 flex flex-col justify-center w-full max-w-[22rem] mx-auto py-xl">
             <h1 className="font-display-lg text-on-surface leading-tight text-center">Bem-vindo de volta</h1>
             <p className="font-body-sm text-on-surface-variant mt-xs mb-lg text-center">
-              Entre com suas credenciais ou use o reconhecimento facial.
+              Use o reconhecimento facial para entrar.
             </p>
 
-            <div className="flex bg-surface-container-high rounded-full p-1 mb-lg">
-              <button
-                type="button"
-                onClick={() => switchTab('credentials')}
-                className={`flex-1 py-sm rounded-full font-label-md transition-colors ${
-                  tab === 'credentials'
-                    ? 'bg-surface-container text-on-surface shadow-sm'
-                    : 'text-on-surface-variant hover:text-on-surface'
+            <div className="flex flex-col items-center gap-md">
+              <div
+                className={`w-48 h-48 rounded-2xl bg-surface-container-high border-2 flex items-center justify-center overflow-hidden relative ${
+                  matchedName ? 'border-error' : 'border-dashed border-outline-variant'
                 }`}
               >
-                Email e senha
-              </button>
-              <button
-                type="button"
-                onClick={() => switchTab('facial')}
-                className={`flex-1 py-sm rounded-full font-label-md transition-colors ${
-                  tab === 'facial'
-                    ? 'bg-surface-container text-on-surface shadow-sm'
-                    : 'text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                Facial
-              </button>
-            </div>
-
-            {tab === 'credentials' ? (
-              <form onSubmit={handleCredentialsSubmit} className="flex flex-col gap-md">
-                <div className="flex items-center gap-sm rounded-full border border-outline-variant bg-surface-container-high px-lg py-sm focus-within:border-error transition-colors">
-                  <span className="material-symbols-outlined text-on-surface-variant text-[18px] shrink-0">mail</span>
-                  <input
-                    type="email"
-                    required
-                    autoFocus
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email"
-                    className="flex-1 min-w-0 bg-transparent outline-none text-body-md text-on-surface placeholder:text-on-surface-variant/60"
-                  />
-                </div>
-                <div className="flex items-center gap-sm rounded-full border border-outline-variant bg-surface-container-high px-lg py-sm focus-within:border-error transition-colors">
-                  <span className="material-symbols-outlined text-on-surface-variant text-[18px] shrink-0">lock</span>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Senha"
-                    className="flex-1 min-w-0 bg-transparent outline-none text-body-md text-on-surface placeholder:text-on-surface-variant/60"
-                  />
-                </div>
-                {credError && (
-                  <p className="font-label-sm text-error flex items-center gap-xs px-md">
-                    <span className="material-symbols-outlined text-[16px]">error</span>
-                    {credError}
-                  </p>
+                <video
+                  ref={videoRef}
+                  className={`w-full h-full object-cover -scale-x-100 ${isScanning ? '' : 'hidden'}`}
+                  muted
+                  playsInline
+                />
+                {!isScanning && (
+                  <span className="material-symbols-outlined text-on-surface-variant text-[36px]">
+                    {matchedName ? 'check_circle' : 'face'}
+                  </span>
                 )}
-                <button
-                  type="submit"
-                  className="mt-xs w-full py-sm rounded-full bg-error text-on-error font-label-md font-bold hover:bg-error/90 transition-colors"
-                >
-                  Continuar
-                </button>
-              </form>
-            ) : (
-              <div className="flex flex-col items-center gap-md">
-                <div
-                  className={`w-48 h-48 rounded-2xl bg-surface-container-high border-2 flex items-center justify-center overflow-hidden relative ${
-                    matchedName ? 'border-error' : 'border-dashed border-outline-variant'
+              </div>
+
+              {facialStatus && (
+                <p
+                  className={`font-label-sm text-center ${
+                    matchedName ? 'text-error font-bold' : 'text-on-surface-variant'
                   }`}
                 >
-                  <video
-                    ref={videoRef}
-                    className={`w-full h-full object-cover -scale-x-100 ${isScanning ? '' : 'hidden'}`}
-                    muted
-                    playsInline
-                  />
-                  {!isScanning && (
-                    <span className="material-symbols-outlined text-on-surface-variant text-[36px]">
-                      {matchedName ? 'check_circle' : 'face'}
-                    </span>
-                  )}
-                </div>
+                  {facialStatus}
+                </p>
+              )}
 
-                {facialStatus && (
-                  <p
-                    className={`font-label-sm text-center ${
-                      matchedName ? 'text-error font-bold' : 'text-on-surface-variant'
-                    }`}
+              {!isScanning && !matchedName && (
+                <div className="flex flex-col w-full gap-xs">
+                  <button
+                    type="button"
+                    onClick={startFacialScan}
+                    disabled={modelsState === 'loading'}
+                    className="w-full py-sm rounded-full bg-error text-on-error font-label-md font-bold hover:bg-error/90 transition-colors disabled:opacity-50"
                   >
-                    {facialStatus}
-                  </p>
-                )}
+                    {modelsState === 'loading' ? 'Carregando...' : 'Iniciar reconhecimento'}
+                  </button>
+                </div>
+              )}
 
-                {!isScanning && !matchedName && (
-                  <div className="flex flex-col w-full gap-xs">
-                    <button
-                      type="button"
-                      onClick={startFacialScan}
-                      disabled={modelsState === 'loading'}
-                      className="w-full py-sm rounded-full bg-error text-on-error font-label-md font-bold hover:bg-error/90 transition-colors disabled:opacity-50"
-                    >
-                      {modelsState === 'loading' ? 'Carregando...' : 'Iniciar reconhecimento'}
-                    </button>
-                  </div>
-                )}
-
-                {/* Enrollment button always visible */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCapturedPhoto(null);
-                    setEnrollName('');
-                    setEnrollRole('');
-                    setEnrollEmail('');
-                    setEnrollPassword('');
-                    setShowEnrollModal(true);
-                  }}
-                  className="w-full py-sm rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md font-semibold transition-colors border border-outline-variant flex items-center justify-center gap-xs"
-                >
-                  <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
-                  Cadastrar biometria facial
-                </button>
-              </div>
-            )}
+              {/* Enrollment button always visible */}
+              <button
+                type="button"
+                onClick={() => {
+                  setCapturedPhoto(null);
+                  setEnrollName('');
+                  setEnrollRole('');
+                  setEnrollEmail('');
+                  setEnrollPassword('');
+                  setShowEnrollModal(true);
+                }}
+                className="w-full py-sm rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md font-semibold transition-colors border border-outline-variant flex items-center justify-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
+                Cadastrar biometria facial
+              </button>
+            </div>
           </div>
 
           {/* Facial Registration Modal */}
