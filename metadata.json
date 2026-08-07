@@ -1,0 +1,6 @@
+{
+  "name": "Inventário de Ferramentas",
+  "description": "Industrial mechanical tool control, inventory management, mechanic boxes audit tracking, and loan/return management system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

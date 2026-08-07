@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+@theme {
+  /* Spacing scale — named sizes used throughout the app (p-lg, gap-sm, etc).
+     Tailwind v4 has no built-in named spacing scale, so these must be
+     defined explicitly or the utilities silently produce no CSS. */
+  --spacing-base: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-gutter: 20px;
+  --spacing-margin: 24px;
+
+  /* Neutral surface scale — light theme, white cards on a soft gray plane */
+  --color-background: #eeeeec;
+  --color-on-background: #16181c;
+  --color-surface: #ffffff;
+  --color-on-surface: #16181c;
+  --color-surface-dim: #eeeeec;
+  --color-surface-bright: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #ffffff;
+  --color-surface-container: #ffffff;
+  --color-surface-container-high: #f2f2f0;
+  --color-surface-container-highest: #e9e9e7;
+  --color-surface-variant: #f2f2f0;
+  --color-on-surface-variant: #75797e;
+  --color-inverse-surface: #22252a;
+  --color-inverse-on-surface: #ffffff;
+  --color-outline: #d7d8d5;
+  --color-outline-variant: #e7e7e5;
+  --color-surface-tint: #dc2626;
+
+  /* Primary — brand red (GV logo red) */
+  --color-primary: #dc2626;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #fde8e8;
+  --color-on-primary-container: #991b1b;
+  --color-primary-fixed: #fde8e8;
+  --color-primary-fixed-dim: #f87171;
+  --color-on-primary-fixed: #7f1d1d;
+  --color-on-primary-fixed-variant: #991b1b;
+  --color-inverse-primary: #f87171;
+
+  /* Secondary — amber, "loaned" / medium priority state */
+  --color-secondary: #ca8a04;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fceed4;
+  --color-on-secondary-container: #7c4a05;
+  --color-secondary-fixed: #fceed4;
+  --color-secondary-fixed-dim: #e5a916;
+  --color-on-secondary-fixed: #402d00;
+  --color-on-secondary-fixed-variant: #7c4a05;
+
+  /* Tertiary — violet, "repair" / informational state */
+  --color-tertiary: #7c6ae0;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #ece8fe;
+  --color-on-tertiary-container: #4c3db8;
+  --color-tertiary-fixed: #ece8fe;
+  --color-tertiary-fixed-dim: #a493f0;
+  --color-on-tertiary-fixed: #241a5c;
+  --color-on-tertiary-fixed-variant: #4c3db8;
+
+  /* Error — red, reserved strictly for critical/lost/damaged states */
+  --color-error: #dc2626;
+  --color-on-error: #ffffff;
+  --color-error-container: #fde8e8;
+  --color-on-error-container: #b42318;
+
+  --font-headline-lg: "Hanken Grotesk", sans-serif;
+  --font-headline-md: "Hanken Grotesk", sans-serif;
+  --font-headline-sm: "Hanken Grotesk", sans-serif;
+  --font-display-lg: "Hanken Grotesk", sans-serif;
+  --font-body-lg: "Inter", sans-serif;
+  --font-body-md: "Inter", sans-serif;
+  --font-body-sm: "Inter", sans-serif;
+  --font-label-md: "Inter", sans-serif;
+  --font-label-sm: "Inter", sans-serif;
+}
+
+/* Dark mode — same brand hues, restepped for a dark surface and re-validated
+   for contrast (primary/secondary/tertiary/error all clear 5.9:1+ on their
+   "on-*" pairs; see conversation notes). Toggled via a `.dark` class on <html>. */
+:root.dark {
+  --color-background: #0a0a0a;
+  --color-on-background: #ededec;
+  --color-surface: #0a0a0a;
+  --color-on-surface: #ededec;
+  --color-surface-dim: #0a0a0a;
+  --color-surface-bright: #2c2c2b;
+  --color-surface-container-lowest: #050505;
+  --color-surface-container-low: #101110;
+  --color-surface-container: #151514;
+  --color-surface-container-high: #1e1f1d;
+  --color-surface-container-highest: #272826;
+  --color-surface-variant: #1e1f1d;
+  --color-on-surface-variant: #9a9b97;
+  --color-inverse-surface: #ededec;
+  --color-inverse-on-surface: #272826;
+  --color-outline: #3e3f3b;
+  --color-outline-variant: #202120;
+  --color-surface-tint: #ef4444;
+
+  --color-primary: #ef4444;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #450a0a;
+  --color-on-primary-container: #fca5a5;
+  --color-primary-fixed: #450a0a;
+  --color-primary-fixed-dim: #dc2626;
+  --color-on-primary-fixed: #fca5a5;
+  --color-on-primary-fixed-variant: #ef4444;
+  --color-inverse-primary: #dc2626;
+
+  --color-secondary: #eba640;
+  --color-on-secondary: #2e2005;
+  --color-secondary-container: #2e2005;
+  --color-on-secondary-container: #ffd89e;
+  --color-secondary-fixed: #2e2005;
+  --color-secondary-fixed-dim: #ca8a04;
+  --color-on-secondary-fixed: #ffd89e;
+  --color-on-secondary-fixed-variant: #eba640;
+
+  --color-tertiary: #a493f0;
+  --color-on-tertiary: #241c4d;
+  --color-tertiary-container: #241c4d;
+  --color-on-tertiary-container: #d6cdff;
+  --color-tertiary-fixed: #241c4d;
+  --color-tertiary-fixed-dim: #7c6ae0;
+  --color-on-tertiary-fixed: #d6cdff;
+  --color-on-tertiary-fixed-variant: #a493f0;
+
+  --color-error: #f2685f;
+  --color-on-error: #2c0906;
+  --color-error-container: #3a1512;
+  --color-on-error-container: #ffb4ac;
+}
+
+@layer utilities {
+  .font-headline-lg {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .font-headline-md {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 22px;
+    line-height: 30px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .font-headline-sm {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 18px;
+    line-height: 26px;
+    font-weight: 600;
+  }
+  .font-display-lg {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 40px;
+    line-height: 46px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .font-body-lg {
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 400;
+  }
+  .font-body-md {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 22px;
+    font-weight: 400;
+  }
+  .font-body-sm {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 19px;
+    font-weight: 400;
+  }
+  .font-label-md {
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    line-height: 17px;
+    letter-spacing: 0;
+    font-weight: 600;
+  }
+  .font-label-sm {
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    line-height: 15px;
+    letter-spacing: 0;
+    font-weight: 600;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d7d8d5;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b9bab6;
+}
+:root.dark ::-webkit-scrollbar-thumb {
+  background: #272826;
+}
+:root.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3e3f3b;
+}
