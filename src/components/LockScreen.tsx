@@ -146,7 +146,6 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
   };
 
   const startFacialScan = async () => {
-    setCredError(null);
 
     if (enrolledPeople.length === 0) {
       setFacialStatus('Nenhuma biometria cadastrada ainda. Clique no botão "Cadastrar biometria facial" abaixo.');
