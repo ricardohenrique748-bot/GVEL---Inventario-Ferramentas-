@@ -290,18 +290,74 @@ export default function App() {
     setCurrentPage('mechanic-boxes');
   };
 
-  const handleRegisterFace = async (personId: string, photoUrl: string) => {
-    setPeople((prev) =>
-      prev.map((p) => (p.id === personId ? { ...p, photoUrl } : p))
-    );
+  const handleRegisterFace = async (data: {
+    name: string;
+    role: string;
+    email: string;
+    password: string;
+    photoUrl: string;
+  }) => {
+    const emailLower = data.email.toLowerCase();
+    const existing = people.find((p) => p.email.toLowerCase() === emailLower);
+
+    if (existing) {
+      setPeople((prev) =>
+        prev.map((p) =>
+          p.id === existing.id ? { ...p, photoUrl: data.photoUrl, name: data.name, role: data.role || p.role } : p
+        )
+      );
+      try {
+        await supabase
+          .from('people')
+          .update({ photo_url: data.photoUrl, name: data.name, role: data.role || existing.role })
+          .eq('id', existing.id);
+      } catch (e) {
+        // fallback to local state
+      }
+      showToast(`Biometria facial atualizada para ${data.name}!`);
+      return;
+    }
+
+    const usernameBase = emailLower.split('@')[0].replace(/[^a-z0-9._-]/g, '') || `user${Date.now()}`;
+    let username = usernameBase;
+    let suffix = 1;
+    while (people.some((p) => p.username.toLowerCase() === username.toLowerCase())) {
+      username = `${usernameBase}${suffix++}`;
+    }
+
+    const newPerson: Person = {
+      id: `p-${Date.now()}`,
+      name: data.name,
+      registration: '',
+      role: data.role || 'Colaborador',
+      sector: '',
+      username,
+      email: data.email,
+      password: data.password,
+      active: true,
+      photoUrl: data.photoUrl,
+    };
+
+    setPeople((prev) => [newPerson, ...prev]);
 
     try {
-      await supabase.from('people').update({ photo_url: photoUrl }).eq('id', personId);
+      await supabase.from('people').insert({
+        id: newPerson.id,
+        name: newPerson.name,
+        registration: newPerson.registration,
+        role: newPerson.role,
+        sector: newPerson.sector,
+        username: newPerson.username,
+        email: newPerson.email,
+        password: newPerson.password,
+        active: newPerson.active,
+        photo_url: newPerson.photoUrl,
+      });
     } catch (e) {
       // fallback to local state
     }
 
-    showToast('Biometria facial cadastrada com sucesso!');
+    showToast(`Biometria facial cadastrada para ${newPerson.name}!`);
   };
 
   if (showSplash) {

@@ -4,10 +4,18 @@ import { Person } from '../types';
 import logo from '../assets/logo.png';
 import { CameraCapture } from './CameraCapture';
 
+export interface FaceEnrollmentData {
+  name: string;
+  role: string;
+  email: string;
+  password: string;
+  photoUrl: string;
+}
+
 interface LockScreenProps {
   people: Person[];
   onUnlock: (person: Person) => void;
-  onRegisterFace?: (personId: string, photoUrl: string) => void;
+  onRegisterFace?: (data: FaceEnrollmentData) => void;
 }
 
 type ModelsState = 'idle' | 'loading' | 'ready' | 'error';
@@ -389,7 +397,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
                     <span className="material-symbols-outlined text-white/30 text-[18px]">person</span>
                     <input
                       type="text"
-                      placeholder="Nome completo (opcional)"
+                      placeholder="Nome completo"
                       value={enrollName}
                       onChange={(e) => setEnrollName(e.target.value)}
                       className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
@@ -413,7 +421,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
                     <span className="material-symbols-outlined text-white/30 text-[18px]">mail</span>
                     <input
                       type="email"
-                      placeholder="E-mail (opcional)"
+                      placeholder="E-mail"
                       value={enrollEmail}
                       onChange={(e) => setEnrollEmail(e.target.value)}
                       className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
@@ -425,7 +433,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
                     <span className="material-symbols-outlined text-white/30 text-[18px]">lock</span>
                     <input
                       type={enrollShowPass ? 'text' : 'password'}
-                      placeholder="Senha (opcional)"
+                      placeholder="Senha"
                       value={enrollPassword}
                       onChange={(e) => setEnrollPassword(e.target.value)}
                       className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
@@ -453,22 +461,25 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
                   </button>
                   <button
                     type="button"
-                    disabled={!capturedPhoto}
+                    disabled={!capturedPhoto || !enrollName.trim() || !enrollEmail.trim() || !enrollPassword.trim()}
                     onClick={() => {
-                      if (!capturedPhoto) return;
-                      const targetId = people[0]?.id;
-                      if (onRegisterFace && targetId) {
-                        onRegisterFace(targetId, capturedPhoto);
-                      }
+                      if (!capturedPhoto || !enrollName.trim() || !enrollEmail.trim() || !enrollPassword.trim()) return;
+                      onRegisterFace?.({
+                        name: enrollName.trim(),
+                        role: enrollRole.trim(),
+                        email: enrollEmail.trim(),
+                        password: enrollPassword,
+                        photoUrl: capturedPhoto,
+                      });
                       setShowEnrollModal(false);
                       setCapturedPhoto(null);
+                      setFacialStatus(
+                        `Biometria cadastrada para ${enrollName.trim()}! Clique em Iniciar reconhecimento.`
+                      );
                       setEnrollName('');
                       setEnrollRole('');
                       setEnrollEmail('');
                       setEnrollPassword('');
-                      setFacialStatus(
-                        `Biometria cadastrada para ${enrollName || 'novo usuário'}! Clique em Iniciar reconhecimento.`
-                      );
                     }}
                     className="flex-[2] py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-red-600/20"
                   >
