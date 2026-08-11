@@ -7,6 +7,7 @@ interface HeaderProps {
   onNavigateToAlert: (type: string) => void;
   currentUser: Person;
   onLock: () => void;
+  fullWidth?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -14,6 +15,7 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigateToAlert,
   currentUser,
   onLock,
+  fullWidth,
 }) => {
   const [showAlertsMenu, setShowAlertsMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -21,7 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="fixed top-0 left-64 right-0 h-16 bg-background/80 backdrop-blur-xl z-40 border-b border-outline-variant flex items-center justify-end px-lg select-none">
+      <header className={`fixed top-0 ${fullWidth ? 'left-0' : 'left-64'} right-0 h-16 bg-background/80 backdrop-blur-xl z-40 border-b border-outline-variant flex items-center justify-end px-lg select-none`}>
         {/* Right Header Actions */}
         <div className="flex items-center gap-sm relative">
           {/* Alerts Toggle Button */}

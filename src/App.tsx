@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { PageId, ToolItem, MechanicBox, AuditLogItem, AlertItem, ToolStatus, Person } from './types';
 import {
   INITIAL_TOOLS,
@@ -374,6 +375,35 @@ export default function App() {
           setCurrentPage('tool-requests');
         }}
       />
+    );
+  }
+
+  if (Capacitor.isNativePlatform()) {
+    return (
+      <div className="min-h-screen bg-background text-on-background font-body-md flex flex-col">
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 z-50 bg-primary-container border border-primary text-on-primary-container px-lg py-md rounded-xl shadow-2xl font-label-md flex items-center gap-md animate-in slide-in-from-bottom-5">
+            <span className="material-symbols-outlined text-primary text-[22px]">info</span>
+            <span>{toastMessage}</span>
+          </div>
+        )}
+
+        <Header
+          alerts={alerts}
+          onNavigateToAlert={() => {}}
+          currentUser={currentUser}
+          onLock={() => setCurrentUser(null)}
+          fullWidth
+        />
+
+        <main className="relative pt-16 w-full flex-1">
+          <ToolRequestsView
+            tools={tools}
+            mechanicNames={people.filter((p) => p.active).map((p) => p.name)}
+            onRequestTools={handleRequestTools}
+          />
+        </main>
+      </div>
     );
   }
 

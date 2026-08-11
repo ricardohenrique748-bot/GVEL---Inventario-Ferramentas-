@@ -92,7 +92,7 @@ CREATE POLICY "Permitir acesso total a alerts" ON public.alerts FOR ALL USING (t
 -- Inserir Usuário Administrador Ricardo + Equipe
 INSERT INTO public.people (id, name, registration, role, sector, username, email, password, active)
 VALUES
-('p-0', 'Ricardo Luz', 'MAT-1001', 'Administrador', 'Gestão', 'ricardo_h', 'ricardo_h.16@hotmail.com', '15975321', true),
+('p-0', 'Ricardo Henrique', 'MAT-1001', 'Administrador', 'Gestão', 'ricardo_h', 'ricardo_h.16@hotmail.com', '15975321', true),
 ('p-1', 'J. Miller', 'MAT-8922', 'Mecânico', 'Turno Alpha', 'j.miller', 'j.miller@gvel.com', 'gvel123', true),
 ('p-2', 'S. Patel', 'MAT-7104', 'Mecânico', 'Turno Alpha', 's.patel', 's.patel@gvel.com', 'gvel123', true),
 ('p-3', 'D. Washington', 'MAT-9331', 'Supervisor', 'Turno Bravo', 'd.washington', 'd.washington@gvel.com', 'gvel123', true),

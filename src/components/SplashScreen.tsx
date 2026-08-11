@@ -61,8 +61,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         <div
           style={{
             position: 'relative',
-            width: '100px',
-            height: '100px',
+            width: '148px',
+            height: '148px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -72,11 +72,11 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
           <div
             style={{
               position: 'absolute',
-              inset: '-6px',
+              inset: '-8px',
               borderRadius: '50%',
               border: '2px solid transparent',
-              borderTopColor: '#b91c1c',
-              borderRightColor: 'rgba(185,28,28,0.3)',
+              borderTopColor: '#ef4444',
+              borderRightColor: 'rgba(239,68,68,0.35)',
               animation: phase === 'visible' ? 'spin 1.5s linear infinite' : undefined,
             }}
           />
@@ -84,9 +84,20 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
           <div
             style={{
               position: 'absolute',
-              inset: '-10px',
+              inset: '-13px',
               borderRadius: '50%',
-              border: '1px solid rgba(185,28,28,0.15)',
+              border: '1px solid rgba(239,68,68,0.18)',
+            }}
+          />
+          {/* Backdrop plate for contrast */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.02) 100%)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 40px rgba(220,38,38,0.25)',
             }}
           />
           {/* Logo image */}
@@ -94,12 +105,11 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
             src={logo}
             alt="GVEL"
             style={{
-              width: '84px',
-              height: '84px',
+              position: 'relative',
+              width: '112px',
+              height: '112px',
               objectFit: 'contain',
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.03)',
-              padding: '10px',
+              filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.6))',
             }}
           />
         </div>

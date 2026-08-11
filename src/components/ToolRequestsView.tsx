@@ -36,7 +36,18 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
     return true;
   });
 
-  const loanedTools = tools.filter((t) => t.status === 'loaned');
+  const loanedTools = tools.filter((t) => {
+    if (t.status !== 'loaned') return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const matches =
+        t.name.toLowerCase().includes(q) ||
+        t.code.toLowerCase().includes(q) ||
+        (t.assignedTo || '').toLowerCase().includes(q);
+      if (!matches) return false;
+    }
+    return true;
+  });
 
   const selectedTools = tools.filter((t) => selectedToolIds.includes(t.id));
 
@@ -95,7 +106,7 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Nome ou código"
+                placeholder="Nome, código ou responsável"
                 className="w-full bg-surface-container-high border border-outline-variant/30 text-on-surface font-body-md rounded-lg py-sm pl-9 pr-md focus:ring-1 focus:ring-primary outline-none"
               />
             </div>

@@ -206,7 +206,7 @@ export const INITIAL_AUDIT_LOGS: AuditLogItem[] = [
 export const INITIAL_PEOPLE: Person[] = [
   {
     id: 'p-0',
-    name: 'Ricardo Luz',
+    name: 'Ricardo Henrique',
     registration: 'MAT-1001',
     role: 'Administrador',
     sector: 'Gestão',

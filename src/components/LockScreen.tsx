@@ -43,6 +43,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const matcherRef = useRef<faceapi.FaceMatcher | null>(null);
+  const matcherSignatureRef = useRef<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const unlockedRef = useRef(false);
 
@@ -59,6 +60,17 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
   };
 
   useEffect(() => stopScanning, []);
+
+  // Pré-aquece modelos de IA e o comparador de rostos em segundo plano,
+  // assim o clique em "Iniciar Reconhecimento" só precisa ligar a câmera.
+  useEffect(() => {
+    if (enrolledPeople.length === 0) return;
+    (async () => {
+      const loaded = await ensureModelsLoaded();
+      if (loaded) await buildMatcher();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [people]);
 
   const loadImageElement = (url: string): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
@@ -102,6 +114,9 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
   };
 
   const buildMatcher = async () => {
+    const signature = enrolledPeople.map((p) => `${p.id}:${p.photoUrl}`).join('|');
+    if (matcherRef.current && matcherSignatureRef.current === signature) return;
+
     const labeled: faceapi.LabeledFaceDescriptors[] = [];
     for (const person of enrolledPeople) {
       try {
@@ -124,7 +139,13 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
         console.error(`Erro ao extrair descritor facial de ${person.name}:`, err);
       }
     }
-    matcherRef.current = labeled.length > 0 ? new faceapi.FaceMatcher(labeled, MATCH_THRESHOLD) : null;
+
+    if (labeled.length > 0) {
+      matcherRef.current = new faceapi.FaceMatcher(labeled, MATCH_THRESHOLD);
+      matcherSignatureRef.current = signature;
+    } else {
+      matcherRef.current = null;
+    }
   };
 
   const runDetectionTick = async () => {
@@ -205,7 +226,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
         <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-red-900/10 rounded-full blur-[90px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md lg:max-w-5xl mx-auto bg-[#141414] rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col lg:flex-row my-auto" style={{ width: '100%' }}>
+      <div className="relative z-10 w-full max-w-[28rem] lg:max-w-5xl mx-auto bg-[#141414] rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col lg:flex-row my-auto" style={{ width: '100%' }}>
         {/* Left: auth panel */}
         <div className="w-full lg:w-1/2 flex flex-col p-5 sm:p-8 md:p-10 justify-between box-border" style={{ width: '100%' }}>
           {/* Header Branding */}
@@ -279,7 +300,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
 
               {/* Status Message Display */}
               {facialStatus && (
-                <div className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm text-center font-medium w-full max-w-xs transition-all ${
+                <div className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm text-center font-medium w-full max-w-[20rem] transition-all ${
                   matchedName 
                     ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold' 
                     : isScanning 
@@ -325,7 +346,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
           </div>
 
           {/* Footer note */}
-          <p className="text-[11px] text-white/30 text-center max-w-xs mx-auto mt-6">
+          <p className="text-[11px] text-white/30 text-center max-w-[20rem] mx-auto mt-6">
             Inventário de Ferramentas GVEL — Controle e segurança de ativos industriais.
           </p>
         </div>
@@ -333,7 +354,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
         {/* Facial Registration Modal */}
         {showEnrollModal && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <div className="bg-[#181818] w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6 sm:zoom-in-95 max-h-[92vh] overflow-y-auto">
+            <div className="bg-[#181818] w-full sm:max-w-[28rem] rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6 sm:zoom-in-95 max-h-[92vh] overflow-y-auto">
               {/* Header */}
               <div className="relative flex items-center justify-center pt-5 pb-3.5 px-5 border-b border-white/10 bg-white/[0.02]">
                 <div className="absolute left-5 w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
@@ -551,7 +572,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
               <h3 className="text-white text-xl sm:text-2xl font-extrabold tracking-tight">
                 Controle Total de Ferramentas
               </h3>
-              <p className="text-white/60 text-xs sm:text-sm mt-2 max-w-xs mx-auto leading-relaxed">
+              <p className="text-white/60 text-xs sm:text-sm mt-2 max-w-[20rem] mx-auto leading-relaxed">
                 Gestão de estoque industrial, empréstimos biométricos e auditoria em tempo real.
               </p>
             </div>
