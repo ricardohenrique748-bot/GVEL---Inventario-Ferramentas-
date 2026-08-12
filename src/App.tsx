@@ -467,7 +467,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <div className="pl-64 w-full flex flex-col min-h-screen">
+      <div className="pl-[17rem] w-full flex flex-col min-h-screen">
         {/* Top Header */}
         <Header
           alerts={alerts}
@@ -480,6 +480,7 @@ export default function App() {
         <main className="relative pt-16 w-full flex-1">
           {currentPage === 'dashboard' && (
             <DashboardView
+              currentUser={currentUser}
               onNavigate={setCurrentPage}
               auditLogs={auditLogs}
               onOpenScanner={() => setShowScanner(true)}

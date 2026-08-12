@@ -289,7 +289,7 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
 
       {/* Sticky selection bar */}
       {selectedToolIds.length > 0 && (
-        <div className="fixed bottom-0 left-64 right-0 z-30 bg-surface-container shadow-2xl border-t border-outline-variant px-lg py-md flex items-center justify-between animate-in slide-in-from-bottom-3">
+        <div className="fixed bottom-0 left-0 lg:left-[17rem] right-0 z-30 bg-surface-container shadow-2xl border-t border-outline-variant px-lg py-md flex items-center justify-between animate-in slide-in-from-bottom-3">
           <span className="font-label-md text-on-surface flex items-center gap-sm">
             <span className="material-symbols-outlined text-primary text-[20px]">shopping_cart_checkout</span>
             {selectedToolIds.length} ferramenta{selectedToolIds.length > 1 ? 's' : ''} selecionada{selectedToolIds.length > 1 ? 's' : ''}
