@@ -55,6 +55,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ logs }) => {
           <option value="Dano">Dano</option>
           <option value="Auditoria de Caixa">Auditoria de Caixa</option>
           <option value="Novo Ativo">Novo Ativo</option>
+          <option value="Exclusão">Exclusão</option>
         </select>
       </div>
 

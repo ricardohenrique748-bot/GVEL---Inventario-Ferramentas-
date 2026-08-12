@@ -21,6 +21,8 @@ interface LockScreenProps {
 
 type ModelsState = 'idle' | 'loading' | 'ready' | 'error';
 
+const REMEMBERED_EMAIL_KEY = 'toolcontrol-remembered-email';
+
 const MODEL_URL = '/models/';
 const MATCH_THRESHOLD = 0.55;
 const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
@@ -40,6 +42,13 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
   const [enrollEmail, setEnrollEmail] = useState('');
   const [enrollPassword, setEnrollPassword] = useState('');
   const [enrollShowPass, setEnrollShowPass] = useState(false);
+
+  // Web email/password login state
+  const [loginEmail, setLoginEmail] = useState(() => localStorage.getItem(REMEMBERED_EMAIL_KEY) || '');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginShowPass, setLoginShowPass] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [rememberEmail, setRememberEmail] = useState(() => !!localStorage.getItem(REMEMBERED_EMAIL_KEY));
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -219,6 +228,36 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
   };
 
 
+  const handleWebLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const emailInput = loginEmail.trim().toLowerCase();
+    const passwordInput = loginPassword;
+
+    if (!emailInput || !passwordInput) {
+      setLoginError('Informe e-mail e senha.');
+      return;
+    }
+
+    const person = people.find((p) => p.email.toLowerCase() === emailInput);
+    if (!person || person.password !== passwordInput) {
+      setLoginError('E-mail ou senha inválidos.');
+      return;
+    }
+    if (!person.active) {
+      setLoginError('Este usuário está inativo. Contate um administrador.');
+      return;
+    }
+
+    if (rememberEmail) {
+      localStorage.setItem(REMEMBERED_EMAIL_KEY, person.email);
+    } else {
+      localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    }
+
+    setLoginError(null);
+    onUnlock(person);
+  };
+
   const isNative = Capacitor.isNativePlatform();
 
   const scanKeyframes = (
@@ -244,7 +283,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
     `}</style>
   );
 
-  const authContent = (
+  const facialAuthContent = (
     <>
       {/* Header Branding */}
       <div className="flex flex-col items-center justify-center text-center gap-2 mb-4 sm:mb-6">
@@ -368,6 +407,106 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
       </p>
     </>
   );
+
+  const emailAuthContent = (
+    <>
+      {/* Header Branding */}
+      <div className="flex flex-col items-center justify-center text-center gap-2 mb-4 sm:mb-6">
+        <div className="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-2.5 shadow-lg">
+          <img src={logo} alt="Inventario Ferramentas - GV" className="w-full h-full object-contain" />
+        </div>
+        <div className="mt-1">
+          <h2 className="text-white font-extrabold text-lg sm:text-xl tracking-tight">Inventario Ferramentas - GV</h2>
+          <span className="text-red-500 text-[10px] uppercase font-bold tracking-[3px] block">Sistema de Gestão Industrial</span>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col justify-center w-full mx-auto my-2 box-border">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight text-center tracking-tight">
+          Acesso ao Sistema
+        </h1>
+        <p className="text-xs sm:text-sm text-white/50 mt-1.5 mb-6 text-center">
+          Entre com seu e-mail e senha cadastrados para acessar o sistema.
+        </p>
+
+        <form onSubmit={handleWebLogin} className="flex flex-col gap-3">
+          {/* Email */}
+          <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-red-500/60 transition-colors">
+            <span className="material-symbols-outlined text-white/30 text-[18px]">mail</span>
+            <input
+              type="email"
+              autoComplete="off"
+              placeholder="E-mail"
+              value={loginEmail}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setLoginEmail(e.target.value);
+                setLoginError(null);
+              }}
+              className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
+            />
+          </div>
+
+          {/* Password */}
+          <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-red-500/60 transition-colors">
+            <span className="material-symbols-outlined text-white/30 text-[18px]">lock</span>
+            <input
+              type={loginShowPass ? 'text' : 'password'}
+              autoComplete="off"
+              placeholder="Senha"
+              value={loginPassword}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setLoginPassword(e.target.value);
+                setLoginError(null);
+              }}
+              className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
+            />
+            <button
+              type="button"
+              onClick={() => setLoginShowPass(!loginShowPass)}
+              className="text-white/30 hover:text-white/60 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                {loginShowPass ? 'visibility_off' : 'visibility'}
+              </span>
+            </button>
+          </div>
+
+          {/* Remember Email */}
+          <label className="flex items-center gap-2.5 px-1 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberEmail}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRememberEmail(e.target.checked)}
+              className="w-4 h-4 rounded border-white/20 bg-white/5 accent-red-600 cursor-pointer"
+            />
+            <span className="text-xs text-white/50">Lembrar meu e-mail neste dispositivo</span>
+          </label>
+
+          {/* Error Message */}
+          {loginError && (
+            <div className="px-4 py-2.5 rounded-xl text-xs sm:text-sm text-center font-medium bg-red-500/10 border border-red-500/20 text-red-400">
+              {loginError}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="w-full py-3.5 px-6 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-all shadow-lg shadow-red-600/25 active:scale-[0.99] flex items-center justify-center gap-2 mt-2"
+          >
+            <span className="material-symbols-outlined text-[20px]">login</span>
+            Entrar
+          </button>
+        </form>
+      </div>
+
+      {/* Footer note */}
+      <p className="text-[11px] text-white/30 text-center max-w-[20rem] mx-auto mt-6">
+        Inventário de Ferramentas GVEL — Controle e segurança de ativos industriais.
+      </p>
+    </>
+  );
+
+  const authContent = isNative ? facialAuthContent : emailAuthContent;
 
   const enrollmentModal = (
     <>
@@ -607,7 +746,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
   const webFeatures = [
     { icon: 'inventory_2', label: 'Controle de estoque de ferramentas em tempo real' },
     { icon: 'fact_check', label: 'Auditoria e rastreabilidade completa dos ativos' },
-    { icon: 'face_unlock', label: 'Empréstimos seguros com biometria facial' },
+    { icon: 'lock', label: 'Acesso seguro com e-mail e senha corporativos' },
     { icon: 'engineering', label: 'Gestão de caixas e ferramentas dos mecânicos' },
   ];
 
@@ -617,8 +756,6 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
       <div className="w-full lg:w-[440px] xl:w-[520px] shrink-0 flex flex-col justify-center px-6 sm:px-12 xl:px-16 py-10 relative z-10 bg-[#0d0d0d] lg:border-r lg:border-white/10 min-h-screen box-border">
         {authContent}
       </div>
-
-      {enrollmentModal}
 
       {/* Right: wide hero panel filling the rest of the browser viewport */}
       <div className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden bg-gradient-to-br from-[#0a0a0a] via-[#160505] to-[#2a0808]">

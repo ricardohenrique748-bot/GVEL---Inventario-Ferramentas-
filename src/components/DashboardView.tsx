@@ -14,6 +14,7 @@ const activityIcon: Record<AuditLogItem['type'], string> = {
   'Auditoria de Caixa': 'fact_check',
   'Novo Ativo': 'add_box',
   'Manutenção': 'build_circle',
+  'Exclusão': 'delete',
 };
 
 const activityColor: Record<AuditLogItem['statusColor'], { bg: string; fg: string }> = {

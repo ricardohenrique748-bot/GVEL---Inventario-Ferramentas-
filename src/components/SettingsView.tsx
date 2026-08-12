@@ -9,6 +9,8 @@ interface SettingsViewProps {
   onAddPerson: (person: Omit<Person, 'id'>) => void;
   onUpdatePerson: (id: string, updates: Partial<Person>) => void;
   onTogglePersonActive: (id: string) => void;
+  onDeletePerson: (id: string) => void;
+  isAdmin: boolean;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -18,6 +20,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onAddPerson,
   onUpdatePerson,
   onTogglePersonActive,
+  onDeletePerson,
+  isAdmin,
 }) => {
   const [workshopLocation, setWorkshopLocation] = useState('Oficina Principal - Baia da Frota 4');
   const [barcodeFormat, setBarcodeFormat] = useState('QR Code 2D');
@@ -56,6 +60,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         onAddPerson={onAddPerson}
         onUpdatePerson={onUpdatePerson}
         onTogglePersonActive={onTogglePersonActive}
+        onDeletePerson={onDeletePerson}
+        isAdmin={isAdmin}
       />
 
       <div className="bg-surface-container rounded-xl p-lg border border-outline-variant/30 space-y-lg max-w-3xl">

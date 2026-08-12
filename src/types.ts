@@ -41,7 +41,7 @@ export interface MechanicBox {
 
 export interface AuditLogItem {
   id: string;
-  type: 'Empréstimo' | 'Devolução' | 'Dano' | 'Auditoria de Caixa' | 'Novo Ativo' | 'Manutenção';
+  type: 'Empréstimo' | 'Devolução' | 'Dano' | 'Auditoria de Caixa' | 'Novo Ativo' | 'Manutenção' | 'Exclusão';
   title: string;
   timestamp: string;
   assetCode?: string;

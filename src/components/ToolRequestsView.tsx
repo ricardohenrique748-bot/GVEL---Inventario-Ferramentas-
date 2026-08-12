@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ToolItem } from '../types';
 import { CameraCapture } from './CameraCapture';
+import { AddToolModal } from './AddToolModal';
 
 interface ToolRequestsViewProps {
   tools: ToolItem[];
@@ -11,17 +12,24 @@ interface ToolRequestsViewProps {
     requesterBay: string,
     proofPhotoUrl: string
   ) => void;
+  isAdmin?: boolean;
+  onAddTool?: (newTool: Omit<ToolItem, 'id'>) => void;
+  onDeleteTool?: (toolId: string) => void;
 }
 
 export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
   tools,
   mechanicNames,
   onRequestTools,
+  isAdmin,
+  onAddTool,
+  onDeleteTool,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedToolIds, setSelectedToolIds] = useState<string[]>([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showAddToolModal, setShowAddToolModal] = useState(false);
   const [requesterName, setRequesterName] = useState('');
   const [requesterBay, setRequesterBay] = useState('');
   const [proofPhoto, setProofPhoto] = useState<string | null>(null);
@@ -83,6 +91,15 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
             Selecione as ferramentas disponíveis no estoque para registrar a retirada.
           </p>
         </div>
+        {isAdmin && onAddTool && (
+          <button
+            onClick={() => setShowAddToolModal(true)}
+            className="flex items-center gap-sm px-lg py-sm rounded-lg bg-primary hover:bg-primary/90 text-on-primary transition-colors font-label-md shrink-0"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            Cadastrar Ferramenta
+          </button>
+        )}
       </div>
 
       {/* Main Content Layout: Left Filter Panel + Right Tool Grid */}
@@ -156,44 +173,60 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
               {availableTools.map((tool) => {
                 const isSelected = selectedToolIds.includes(tool.id);
                 return (
-                  <button
-                    key={tool.id}
-                    type="button"
-                    onClick={() => toggleTool(tool.id)}
-                    className={`text-left bg-surface-container-low rounded-xl p-md border-2 transition-colors flex gap-md items-start ${
-                      isSelected
-                        ? 'border-primary bg-primary-container/30'
-                        : 'border-outline-variant/30 hover:border-primary/40'
-                    }`}
-                  >
-                    <div className="w-12 h-12 shrink-0 rounded-lg bg-surface-container-high overflow-hidden flex items-center justify-center">
-                      {tool.photoUrl ? (
-                        <img src={tool.photoUrl} alt={tool.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">construction</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-headline-sm text-[15px] leading-tight text-on-surface mb-xs truncate">
-                        {tool.name}
-                      </p>
-                      <p className="font-label-sm text-on-surface-variant truncate">
-                        {tool.code} • {tool.brand}
-                      </p>
-                      <p className="font-label-sm text-on-surface-variant/80 truncate mt-xs">
-                        {tool.location}
-                      </p>
-                    </div>
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${
-                        isSelected ? 'bg-primary border-primary' : 'border-outline-variant'
+                  <div key={tool.id} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => toggleTool(tool.id)}
+                      className={`w-full text-left bg-surface-container-low rounded-xl p-md border-2 transition-colors flex gap-md items-start ${
+                        isSelected
+                          ? 'border-primary bg-primary-container/30'
+                          : 'border-outline-variant/30 hover:border-primary/40'
                       }`}
                     >
-                      {isSelected && (
-                        <span className="material-symbols-outlined text-on-primary text-[14px]">check</span>
-                      )}
-                    </div>
-                  </button>
+                      <div className="w-12 h-12 shrink-0 rounded-lg bg-surface-container-high overflow-hidden flex items-center justify-center">
+                        {tool.photoUrl ? (
+                          <img src={tool.photoUrl} alt={tool.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="material-symbols-outlined text-on-surface-variant text-[20px]">construction</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-headline-sm text-[15px] leading-tight text-on-surface mb-xs truncate">
+                          {tool.name}
+                        </p>
+                        <p className="font-label-sm text-on-surface-variant truncate">
+                          {tool.code} • {tool.brand}
+                        </p>
+                        <p className="font-label-sm text-on-surface-variant/80 truncate mt-xs">
+                          {tool.location}
+                        </p>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${
+                          isSelected ? 'bg-primary border-primary' : 'border-outline-variant'
+                        }`}
+                      >
+                        {isSelected && (
+                          <span className="material-symbols-outlined text-on-primary text-[14px]">check</span>
+                        )}
+                      </div>
+                    </button>
+
+                    {isAdmin && onDeleteTool && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Excluir permanentemente "${tool.name}" (${tool.code})?`)) {
+                            onDeleteTool(tool.id);
+                          }
+                        }}
+                        title="Excluir ferramenta"
+                        className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-error text-on-error flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">delete</span>
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -368,6 +401,11 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal: Add Tool (admin only) */}
+      {showAddToolModal && onAddTool && (
+        <AddToolModal onClose={() => setShowAddToolModal(false)} onAddTool={onAddTool} />
       )}
     </div>
   );

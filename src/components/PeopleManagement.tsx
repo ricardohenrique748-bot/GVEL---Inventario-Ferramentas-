@@ -7,6 +7,8 @@ interface PeopleManagementProps {
   onAddPerson: (person: Omit<Person, 'id'>) => void;
   onUpdatePerson: (id: string, updates: Partial<Person>) => void;
   onTogglePersonActive: (id: string) => void;
+  onDeletePerson: (id: string) => void;
+  isAdmin: boolean;
 }
 
 const ROLE_OPTIONS = ['Mecânico', 'Auxiliar de Mecânica', 'Supervisor', 'Almoxarife', 'Administrativo'];
@@ -40,6 +42,8 @@ export const PeopleManagement: React.FC<PeopleManagementProps> = ({
   onAddPerson,
   onUpdatePerson,
   onTogglePersonActive,
+  onDeletePerson,
+  isAdmin,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -223,6 +227,23 @@ export const PeopleManagement: React.FC<PeopleManagementProps> = ({
                           </span>
                           {person.active ? 'Desativar' : 'Ativar'}
                         </button>
+                        {isAdmin && (
+                          <>
+                            <div className="my-xs border-t border-outline-variant/30" />
+                            <button
+                              onClick={() => {
+                                setActionMenuId(null);
+                                if (window.confirm(`Excluir permanentemente "${person.name}"? Essa ação não pode ser desfeita.`)) {
+                                  onDeletePerson(person.id);
+                                }
+                              }}
+                              className="w-full px-md py-xs text-body-sm text-error hover:bg-error-container/40 flex items-center gap-2 font-bold"
+                            >
+                              <span className="material-symbols-outlined text-[16px] text-error">delete</span>
+                              Excluir
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </td>

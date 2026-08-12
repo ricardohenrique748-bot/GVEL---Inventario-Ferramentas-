@@ -158,6 +158,22 @@ export default function App() {
     showToast(`Ferramenta cadastrada: ${newTool.name} (${newTool.code})`);
   };
 
+  const handleDeleteTool = async (toolId: string) => {
+    const target = tools.find((t) => t.id === toolId);
+    if (!target) return;
+
+    setTools((prev) => prev.filter((t) => t.id !== toolId));
+    addAuditLog('Exclusão', 'Ferramenta Excluída', `${target.name} (${target.code}) removida do estoque`, target.code, 'error');
+
+    try {
+      await supabase.from('tools').delete().eq('id', toolId);
+    } catch (e) {
+      // fallback to local state
+    }
+
+    showToast(`Ferramenta excluída: ${target.name}`);
+  };
+
   const handleUpdateToolStatus = (toolId: string, newStatus: ToolStatus, location?: string) => {
     setTools((prev) =>
       prev.map((t) => {
@@ -225,6 +241,26 @@ export default function App() {
     setPeople((prev) =>
       prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p))
     );
+  };
+
+  const handleDeletePerson = async (id: string) => {
+    const target = people.find((p) => p.id === id);
+    if (!target) return;
+
+    if (currentUser?.id === id) {
+      showToast('Você não pode excluir o usuário com o qual está logado.');
+      return;
+    }
+
+    setPeople((prev) => prev.filter((p) => p.id !== id));
+
+    try {
+      await supabase.from('people').delete().eq('id', id);
+    } catch (e) {
+      // fallback to local state
+    }
+
+    showToast(`Pessoa excluída: ${target.name}`);
   };
 
   const handleRequestTools = (
@@ -401,6 +437,9 @@ export default function App() {
             tools={tools}
             mechanicNames={people.filter((p) => p.active).map((p) => p.name)}
             onRequestTools={handleRequestTools}
+            isAdmin={currentUser.role === 'Administrador'}
+            onAddTool={handleAddTool}
+            onDeleteTool={handleDeleteTool}
           />
         </main>
       </div>
@@ -452,6 +491,8 @@ export default function App() {
               tools={tools}
               onAddTool={handleAddTool}
               onUpdateToolStatus={handleUpdateToolStatus}
+              onDeleteTool={handleDeleteTool}
+              isAdmin={currentUser.role === 'Administrador'}
             />
           )}
 
@@ -490,6 +531,8 @@ export default function App() {
               onAddPerson={handleAddPerson}
               onUpdatePerson={handleUpdatePerson}
               onTogglePersonActive={handleTogglePersonActive}
+              onDeletePerson={handleDeletePerson}
+              isAdmin={currentUser.role === 'Administrador'}
             />
           )}
         </main>
