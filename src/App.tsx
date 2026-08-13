@@ -164,7 +164,7 @@ export default function App() {
   };
 
   // Handlers
-  const handleAddTool = (newToolData: Omit<ToolItem, 'id'>) => {
+  const handleAddTool = async (newToolData: Omit<ToolItem, 'id'>) => {
     const newTool: ToolItem = {
       ...newToolData,
       id: `t-${Date.now()}`,
@@ -172,6 +172,26 @@ export default function App() {
     setTools((prev) => [newTool, ...prev]);
     addAuditLog('Novo Ativo', 'Novo Ativo Adicionado', `${newTool.name} (${newTool.code}) registrado no estoque`, newTool.code, 'tertiary');
     showToast(`Ferramenta cadastrada: ${newTool.name} (${newTool.code})`);
+
+    try {
+      await supabase.from('tools').insert({
+        id: newTool.id,
+        code: newTool.code,
+        qr_code: newTool.qrCode,
+        name: newTool.name,
+        category: newTool.category,
+        brand: newTool.brand,
+        location: newTool.location,
+        status: newTool.status,
+        assigned_to: newTool.assignedTo,
+        assigned_bay: newTool.assignedBay,
+        assigned_photo_url: newTool.assignedPhotoUrl,
+        last_audit_date: newTool.lastAuditDate,
+        photo_url: newTool.photoUrl,
+      });
+    } catch (e) {
+      // fallback to local state
+    }
   };
 
   const handleDeleteTool = async (toolId: string) => {
@@ -190,20 +210,38 @@ export default function App() {
     showToast(`Ferramenta excluída: ${target.name}`);
   };
 
-  const handleUpdateToolStatus = (toolId: string, newStatus: ToolStatus, location?: string) => {
+  const handleUpdateToolStatus = async (toolId: string, newStatus: ToolStatus, location?: string) => {
+    let updatedLocation: string | undefined;
+    let updatedAssignedTo: string | undefined;
+
     setTools((prev) =>
       prev.map((t) => {
         if (t.id === toolId) {
+          updatedLocation = location || t.location;
+          updatedAssignedTo = newStatus === 'available' ? undefined : t.assignedTo;
           return {
             ...t,
             status: newStatus,
-            location: location || t.location,
-            assignedTo: newStatus === 'available' ? undefined : t.assignedTo,
+            location: updatedLocation,
+            assignedTo: updatedAssignedTo,
           };
         }
         return t;
       })
     );
+
+    try {
+      await supabase
+        .from('tools')
+        .update({
+          status: newStatus,
+          location: updatedLocation,
+          assigned_to: updatedAssignedTo,
+        })
+        .eq('id', toolId);
+    } catch (e) {
+      // fallback to local state
+    }
   };
 
   const handleAuditBox = (boxId: string, updatedBox: Partial<MechanicBox>) => {
