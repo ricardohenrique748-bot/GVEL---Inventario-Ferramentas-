@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { ToolItem, ToolStatus } from '../types';
+import { ToolItem, ToolStatus, Category } from '../types';
 import { STATUS_LABELS } from '../labels';
 import { AddToolModal } from './AddToolModal';
 
 interface EstoqueViewProps {
   tools: ToolItem[];
+  categories: Category[];
   onAddTool: (newTool: Omit<ToolItem, 'id'>) => void;
+  onAddCategory: (name: string) => void;
   onUpdateToolStatus: (toolId: string, newStatus: ToolStatus, location?: string) => void;
   onUpdateToolQuantity: (toolId: string, newQuantity: number) => void;
   onDeleteTool: (toolId: string) => void;
@@ -82,7 +84,9 @@ const statusDotClasses: Record<ToolStatus, string> = {
 
 export const EstoqueView: React.FC<EstoqueViewProps> = ({
   tools,
+  categories,
   onAddTool,
+  onAddCategory,
   onUpdateToolStatus,
   onUpdateToolQuantity,
   onDeleteTool,
@@ -211,10 +215,9 @@ export const EstoqueView: React.FC<EstoqueViewProps> = ({
               className="w-full bg-surface-container-high border border-outline-variant/30 text-on-surface font-body-md text-body-md rounded-lg py-sm px-md focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer"
             >
               <option value="all">Todas as Categorias</option>
-              <option value="Ferramentas Elétricas">Ferramentas Elétricas</option>
-              <option value="Ferramentas Manuais">Ferramentas Manuais</option>
-              <option value="Equip. de Diagnóstico">Equip. de Diagnóstico</option>
-              <option value="Automotivo Especializado">Automotivo Especializado</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -433,7 +436,12 @@ export const EstoqueView: React.FC<EstoqueViewProps> = ({
 
       {/* Modal: Add Tool */}
       {showAddModal && (
-        <AddToolModal onClose={() => setShowAddModal(false)} onAddTool={onAddTool} />
+        <AddToolModal
+          onClose={() => setShowAddModal(false)}
+          onAddTool={onAddTool}
+          categories={categories}
+          onAddCategory={onAddCategory}
+        />
       )}
     </div>
   );

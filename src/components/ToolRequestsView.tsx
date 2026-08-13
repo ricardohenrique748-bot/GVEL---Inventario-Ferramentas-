@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Person, ToolItem } from '../types';
+import { Person, ToolItem, Category } from '../types';
 import { CameraCapture } from './CameraCapture';
 import { AddToolModal } from './AddToolModal';
 import { PersonFormModal } from './PersonFormModal';
 
 interface ToolRequestsViewProps {
   tools: ToolItem[];
+  categories?: Category[];
   mechanicNames: string[];
   onRequestTools: (
     toolIds: string[],
@@ -15,16 +16,19 @@ interface ToolRequestsViewProps {
   ) => void;
   isAdmin?: boolean;
   onAddTool?: (newTool: Omit<ToolItem, 'id'>) => void;
+  onAddCategory?: (name: string) => void;
   onDeleteTool?: (toolId: string) => void;
   onAddPerson?: (person: Omit<Person, 'id'>) => void;
 }
 
 export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
   tools,
+  categories = [],
   mechanicNames,
   onRequestTools,
   isAdmin,
   onAddTool,
+  onAddCategory,
   onDeleteTool,
   onAddPerson,
 }) => {
@@ -154,10 +158,9 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
               className="w-full bg-surface-container-high border border-outline-variant/30 text-on-surface font-body-md rounded-lg py-sm px-md focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer"
             >
               <option value="all">Todas as Categorias</option>
-              <option value="Ferramentas Elétricas">Ferramentas Elétricas</option>
-              <option value="Ferramentas Manuais">Ferramentas Manuais</option>
-              <option value="Equip. de Diagnóstico">Equip. de Diagnóstico</option>
-              <option value="Automotivo Especializado">Automotivo Especializado</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
             </select>
           </div>
 
@@ -422,7 +425,12 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
 
       {/* Modal: Add Tool (admin only) */}
       {showAddToolModal && onAddTool && (
-        <AddToolModal onClose={() => setShowAddToolModal(false)} onAddTool={onAddTool} />
+        <AddToolModal
+          onClose={() => setShowAddToolModal(false)}
+          onAddTool={onAddTool}
+          categories={categories}
+          onAddCategory={onAddCategory || (() => {})}
+        />
       )}
 
       {/* Modal: Add Person (admin only) */}

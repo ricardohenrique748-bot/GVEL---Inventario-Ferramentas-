@@ -38,12 +38,13 @@ const STATUS_BAR_COLOR: Record<ToolStatus, string> = {
   lost: 'bg-error',
 };
 
-const CATEGORY_COLOR: Record<ToolItem['category'], string> = {
+const CATEGORY_COLOR: Record<string, string> = {
   'Ferramentas Elétricas': 'bg-primary',
   'Ferramentas Manuais': 'bg-[#0891B2]',
   'Equip. de Diagnóstico': 'bg-secondary',
   'Automotivo Especializado': 'bg-tertiary',
 };
+const DEFAULT_CATEGORY_COLOR = 'bg-outline';
 
 const initials = (name: string) =>
   name
@@ -82,15 +83,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       ? Math.round(mechanicBoxes.reduce((sum, b) => sum + b.compliancePercentage, 0) / mechanicBoxes.length)
       : null;
 
-  const categoryTotals: Partial<Record<ToolItem['category'], number>> = {};
+  const categoryTotals: Partial<Record<string, number>> = {};
   tools.forEach((t) => {
     categoryTotals[t.category] = (categoryTotals[t.category] || 0) + 1;
   });
-  const categoryBreakdown = (Object.keys(categoryTotals) as ToolItem['category'][])
+  const categoryBreakdown = Object.keys(categoryTotals)
     .map((label) => ({
       label,
       pct: Math.round(((categoryTotals[label] || 0) / tools.length) * 100),
-      color: CATEGORY_COLOR[label],
+      color: CATEGORY_COLOR[label] || DEFAULT_CATEGORY_COLOR,
     }))
     .sort((a, b) => b.pct - a.pct);
 
