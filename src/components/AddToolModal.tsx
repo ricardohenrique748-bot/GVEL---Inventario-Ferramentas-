@@ -1,35 +1,65 @@
 import React, { useState } from 'react';
-import { ToolItem } from '../types';
+import { ToolItem, Category } from '../types';
 
 interface AddToolModalProps {
   onClose: () => void;
   onAddTool: (newTool: Omit<ToolItem, 'id'>) => void;
+  categories: Category[];
+  onAddCategory: (name: string) => void;
 }
 
-const CATEGORY_CODE_LETTER: Record<ToolItem['category'], string> = {
-  'Ferramentas Elétricas': 'P',
-  'Ferramentas Manuais': 'H',
-  'Equip. de Diagnóstico': 'D',
-  'Automotivo Especializado': 'S',
+const NEW_CATEGORY_OPTION = '__new_category__';
+
+const getCategoryCodeLetter = (categoryName: string, categories: Category[]) => {
+  const found = categories.find((c) => c.name === categoryName);
+  if (found) return found.codeLetter;
+  const letter = categoryName.trim().charAt(0).toUpperCase();
+  return /[A-Z]/.test(letter) ? letter : 'X';
 };
 
-const generateToolCode = (category: ToolItem['category']) => {
-  const letter = CATEGORY_CODE_LETTER[category];
+const generateToolCode = (category: string, categories: Category[]) => {
+  const letter = getCategoryCodeLetter(category, categories);
   const num = Math.floor(1000 + Math.random() * 9000);
   return `TL-${letter}-${num}`;
 };
 
-export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onAddTool }) => {
-  const [newToolCode, setNewToolCode] = useState(() => generateToolCode('Ferramentas Elétricas'));
+export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onAddTool, categories, onAddCategory }) => {
+  const [newToolCode, setNewToolCode] = useState(() =>
+    generateToolCode(categories[0]?.name || '', categories)
+  );
   const [newToolName, setNewToolName] = useState('');
   const [newToolBrand, setNewToolBrand] = useState('Milwaukee');
-  const [newToolCategory, setNewToolCategory] = useState<ToolItem['category']>('Ferramentas Elétricas');
+  const [newToolCategory, setNewToolCategory] = useState(categories[0]?.name || '');
   const [newToolLocation, setNewToolLocation] = useState('Almoxarifado Principal - Prateleira A1');
+  const [newToolQuantity, setNewToolQuantity] = useState(1);
   const [newToolPhoto, setNewToolPhoto] = useState<string | null>(null);
+  const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
-  const handleCategoryChange = (category: ToolItem['category']) => {
+  const handleCategoryChange = (category: string) => {
     setNewToolCategory(category);
-    setNewToolCode(generateToolCode(category));
+    setNewToolCode(generateToolCode(category, categories));
+  };
+
+  const handleCategorySelectChange = (value: string) => {
+    if (value === NEW_CATEGORY_OPTION) {
+      setShowNewCategoryForm(true);
+      return;
+    }
+    setShowNewCategoryForm(false);
+    handleCategoryChange(value);
+  };
+
+  const handleSaveNewCategory = () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    const existing = categories.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    if (!existing) {
+      onAddCategory(name);
+    }
+    handleCategoryChange(existing ? existing.name : name);
+    setShowNewCategoryForm(false);
+    setNewCategoryName('');
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,6 +80,7 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onAddTool }
       brand: newToolBrand,
       category: newToolCategory,
       location: newToolLocation,
+      quantity: newToolQuantity,
       status: 'available',
       lastAuditDate: new Date().toISOString().slice(0, 10),
       photoUrl: newToolPhoto || undefined,
@@ -148,7 +179,7 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onAddTool }
                 />
                 <button
                   type="button"
-                  onClick={() => setNewToolCode(generateToolCode(newToolCategory))}
+                  onClick={() => setNewToolCode(generateToolCode(newToolCategory, categories))}
                   title="Gerar novo código"
                   className="p-sm text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-lg transition-colors shrink-0"
                 >
@@ -189,27 +220,77 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onAddTool }
               Categoria
             </label>
             <select
-              value={newToolCategory}
-              onChange={(e) => handleCategoryChange(e.target.value as ToolItem['category'])}
+              value={showNewCategoryForm ? NEW_CATEGORY_OPTION : newToolCategory}
+              onChange={(e) => handleCategorySelectChange(e.target.value)}
               className="w-full bg-surface-container-high border-b-2 border-outline-variant focus:border-primary px-md py-sm text-body-md text-on-surface outline-none cursor-pointer"
             >
-              <option value="Ferramentas Elétricas">Ferramentas Elétricas</option>
-              <option value="Ferramentas Manuais">Ferramentas Manuais</option>
-              <option value="Equip. de Diagnóstico">Equip. de Diagnóstico</option>
-              <option value="Automotivo Especializado">Automotivo Especializado</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
+              <option value={NEW_CATEGORY_OPTION}>+ Cadastrar nova categoria</option>
             </select>
+            {showNewCategoryForm && (
+              <div className="flex items-center gap-xs mt-xs">
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Nome da nova categoria"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSaveNewCategory();
+                    }
+                  }}
+                  className="flex-1 bg-surface-container-high border-b-2 border-primary px-md py-sm text-body-md text-on-surface outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveNewCategory}
+                  className="px-md py-sm bg-primary text-on-primary font-label-sm rounded shadow-sm hover:bg-primary-fixed transition-colors shrink-0"
+                >
+                  Adicionar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNewCategoryForm(false);
+                    setNewCategoryName('');
+                  }}
+                  className="px-md py-sm text-on-surface-variant font-label-sm hover:bg-surface-container-high rounded transition-colors shrink-0"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-col gap-xs">
-            <label className="font-label-sm text-label-sm text-on-surface-variant">
-              Local de armazenamento
-            </label>
-            <input
-              type="text"
-              value={newToolLocation}
-              onChange={(e) => setNewToolLocation(e.target.value)}
-              className="w-full bg-surface-container-high border-b-2 border-outline-variant focus:border-primary px-md py-sm text-body-md text-on-surface outline-none"
-            />
+          <div className="flex gap-md">
+            <div className="flex-1 flex flex-col gap-xs">
+              <label className="font-label-sm text-label-sm text-on-surface-variant">
+                Local de armazenamento
+              </label>
+              <input
+                type="text"
+                value={newToolLocation}
+                onChange={(e) => setNewToolLocation(e.target.value)}
+                className="w-full bg-surface-container-high border-b-2 border-outline-variant focus:border-primary px-md py-sm text-body-md text-on-surface outline-none"
+              />
+            </div>
+            <div className="w-28 shrink-0 flex flex-col gap-xs">
+              <label className="font-label-sm text-label-sm text-on-surface-variant">
+                Quantidade
+              </label>
+              <input
+                type="number"
+                min={0}
+                required
+                value={newToolQuantity}
+                onChange={(e) => setNewToolQuantity(Math.max(0, Number(e.target.value)))}
+                className="w-full bg-surface-container-high border-b-2 border-outline-variant focus:border-primary px-md py-sm text-body-md text-on-surface outline-none"
+              />
+            </div>
           </div>
 
           <div className="p-lg bg-surface-container flex justify-end gap-md border-t border-outline-variant/30 mt-md">

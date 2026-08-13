@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { PageId, ToolItem, MechanicBox, AuditLogItem, AlertItem, ToolStatus, Person } from './types';
+import { PageId, ToolItem, MechanicBox, AuditLogItem, AlertItem, ToolStatus, Person, Category } from './types';
 import {
   INITIAL_TOOLS,
   INITIAL_MECHANIC_BOXES,
   INITIAL_AUDIT_LOGS,
   INITIAL_ALERTS,
   INITIAL_PEOPLE,
+  INITIAL_CATEGORIES,
 } from './data/initialData';
 
 import { Sidebar } from './components/Sidebar';
@@ -65,6 +66,18 @@ export default function App() {
     }
     return INITIAL_PEOPLE;
   });
+  const [categories, setCategories] = useState<Category[]>(() => {
+    const saved = localStorage.getItem('toolcontrol-categories');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        // fallback to INITIAL_CATEGORIES
+      }
+    }
+    return INITIAL_CATEGORIES;
+  });
 
   // Restore the logged-in session (if any) so a page refresh doesn't force a
   // fresh login. Depends on `people` above, so it must be declared after it.
@@ -112,6 +125,7 @@ export default function App() {
             brand: t.brand,
             location: t.location,
             status: t.status,
+            quantity: t.quantity ?? 1,
             assignedTo: t.assigned_to,
             assignedBay: t.assigned_bay,
             assignedPhotoUrl: t.assigned_photo_url,
@@ -119,6 +133,15 @@ export default function App() {
             photoUrl: t.photo_url,
           }));
           setTools(mappedTools);
+        }
+        const { data: dbCategories } = await supabase.from('categories').select('*');
+        if (dbCategories && dbCategories.length > 0) {
+          const mappedCategories: Category[] = dbCategories.map((c) => ({
+            id: c.id,
+            name: c.name,
+            codeLetter: c.code_letter,
+          }));
+          setCategories(mappedCategories);
         }
       } catch (err) {
         // Fallback to local data on offline or connection error
@@ -131,6 +154,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('toolcontrol-people-v2', JSON.stringify(people));
   }, [people]);
+
+  useEffect(() => {
+    localStorage.setItem('toolcontrol-categories', JSON.stringify(categories));
+  }, [categories]);
 
   // Toast Notification State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -183,12 +210,59 @@ export default function App() {
         brand: newTool.brand,
         location: newTool.location,
         status: newTool.status,
+        quantity: newTool.quantity,
         assigned_to: newTool.assignedTo,
         assigned_bay: newTool.assignedBay,
         assigned_photo_url: newTool.assignedPhotoUrl,
         last_audit_date: newTool.lastAuditDate,
         photo_url: newTool.photoUrl,
       });
+    } catch (e) {
+      // fallback to local state
+    }
+  };
+
+  const handleAddCategory = async (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+      showToast(`Categoria "${trimmed}" já existe`);
+      return;
+    }
+
+    const usedLetters = new Set(categories.map((c) => c.codeLetter));
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let codeLetter = trimmed.charAt(0).toUpperCase();
+    if (!/[A-Z]/.test(codeLetter) || usedLetters.has(codeLetter)) {
+      codeLetter = alphabet.split('').find((l) => !usedLetters.has(l)) || 'X';
+    }
+
+    const newCategory: Category = {
+      id: `cat-${Date.now()}`,
+      name: trimmed,
+      codeLetter,
+    };
+    setCategories((prev) => [...prev, newCategory]);
+    showToast(`Categoria cadastrada: ${trimmed}`);
+
+    try {
+      await supabase.from('categories').insert({
+        id: newCategory.id,
+        name: newCategory.name,
+        code_letter: newCategory.codeLetter,
+      });
+    } catch (e) {
+      // fallback to local state
+    }
+  };
+
+  const handleUpdateToolQuantity = async (toolId: string, newQuantity: number) => {
+    setTools((prev) =>
+      prev.map((t) => (t.id === toolId ? { ...t, quantity: newQuantity } : t))
+    );
+
+    try {
+      await supabase.from('tools').update({ quantity: newQuantity }).eq('id', toolId);
     } catch (e) {
       // fallback to local state
     }
@@ -530,8 +604,11 @@ export default function App() {
       {currentPage === 'estoque' && (
         <EstoqueView
           tools={tools}
+          categories={categories}
           onAddTool={handleAddTool}
+          onAddCategory={handleAddCategory}
           onUpdateToolStatus={handleUpdateToolStatus}
+          onUpdateToolQuantity={handleUpdateToolQuantity}
           onDeleteTool={handleDeleteTool}
           isAdmin={isAdmin}
         />
@@ -540,10 +617,12 @@ export default function App() {
       {currentPage === 'tool-requests' && (
         <ToolRequestsView
           tools={tools}
+          categories={categories}
           mechanicNames={people.filter((p) => p.active).map((p) => p.name)}
           onRequestTools={handleRequestTools}
           isAdmin={isAdmin}
           onAddTool={handleAddTool}
+          onAddCategory={handleAddCategory}
           onDeleteTool={handleDeleteTool}
           onAddPerson={handleAddPerson}
         />

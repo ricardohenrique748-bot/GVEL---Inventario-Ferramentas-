@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ToolItem, ToolStatus } from '../types';
 import { STATUS_LABELS } from '../labels';
 import { AddToolModal } from './AddToolModal';
@@ -7,9 +7,64 @@ interface EstoqueViewProps {
   tools: ToolItem[];
   onAddTool: (newTool: Omit<ToolItem, 'id'>) => void;
   onUpdateToolStatus: (toolId: string, newStatus: ToolStatus, location?: string) => void;
+  onUpdateToolQuantity: (toolId: string, newQuantity: number) => void;
   onDeleteTool: (toolId: string) => void;
   isAdmin: boolean;
 }
+
+interface QuantityCellProps {
+  quantity: number;
+  onChange: (newQuantity: number) => void;
+}
+
+const QuantityCell: React.FC<QuantityCellProps> = ({ quantity, onChange }) => {
+  const [draft, setDraft] = useState(String(quantity));
+
+  useEffect(() => {
+    setDraft(String(quantity));
+  }, [quantity]);
+
+  const commit = () => {
+    const parsed = Math.max(0, Math.floor(Number(draft)));
+    if (Number.isFinite(parsed) && parsed !== quantity) {
+      onChange(parsed);
+    } else {
+      setDraft(String(quantity));
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-xs">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(0, quantity - 1))}
+        className="w-6 h-6 flex items-center justify-center rounded bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-on-surface transition-colors"
+        title="Diminuir quantidade"
+      >
+        <span className="material-symbols-outlined text-[16px]">remove</span>
+      </button>
+      <input
+        type="number"
+        min={0}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        }}
+        className="w-14 text-center bg-surface-container-high border border-outline-variant/30 rounded py-0.5 text-body-md text-on-surface outline-none focus:border-primary"
+      />
+      <button
+        type="button"
+        onClick={() => onChange(quantity + 1)}
+        className="w-6 h-6 flex items-center justify-center rounded bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-on-surface transition-colors"
+        title="Aumentar quantidade"
+      >
+        <span className="material-symbols-outlined text-[16px]">add</span>
+      </button>
+    </div>
+  );
+};
 
 const statusBadgeClasses: Record<ToolStatus, string> = {
   available: 'bg-primary-container text-on-primary-container',
@@ -29,6 +84,7 @@ export const EstoqueView: React.FC<EstoqueViewProps> = ({
   tools,
   onAddTool,
   onUpdateToolStatus,
+  onUpdateToolQuantity,
   onDeleteTool,
   isAdmin,
 }) => {
@@ -46,9 +102,9 @@ export const EstoqueView: React.FC<EstoqueViewProps> = ({
   const [actionMenuToolId, setActionMenuToolId] = useState<string | null>(null);
 
   const handleExportCSV = () => {
-    const headers = ['Código Interno,Nome,Categoria,Marca,Localização,Status\n'];
+    const headers = ['Código Interno,Nome,Categoria,Marca,Localização,Quantidade,Status\n'];
     const rows = tools.map(
-      (t) => `${t.code},"${t.name}",${t.category},${t.brand},"${t.location}",${t.status}`
+      (t) => `${t.code},"${t.name}",${t.category},${t.brand},"${t.location}",${t.quantity},${t.status}`
     );
     const blob = new Blob([headers.concat(rows).join('\n')], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -183,6 +239,9 @@ export const EstoqueView: React.FC<EstoqueViewProps> = ({
                       Localização
                     </th>
                     <th className="py-md px-md font-label-md text-label-md text-on-surface-variant">
+                      Quantidade
+                    </th>
+                    <th className="py-md px-md font-label-md text-label-md text-on-surface-variant">
                       Status
                     </th>
                     <th className="py-md px-md" />
@@ -191,7 +250,7 @@ export const EstoqueView: React.FC<EstoqueViewProps> = ({
                 <tbody className="divide-y divide-outline-variant/10">
                   {filteredTools.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-xl text-center text-on-surface-variant font-body-md">
+                      <td colSpan={7} className="py-xl text-center text-on-surface-variant font-body-md">
                         Nenhuma ferramenta encontrada com os filtros atuais.
                       </td>
                     </tr>
@@ -259,6 +318,14 @@ export const EstoqueView: React.FC<EstoqueViewProps> = ({
                               </span>
                               {tool.assignedTo || tool.location}
                             </span>
+                          </td>
+
+                          {/* Quantity */}
+                          <td className="py-md px-md">
+                            <QuantityCell
+                              quantity={tool.quantity}
+                              onChange={(newQuantity) => onUpdateToolQuantity(tool.id, newQuantity)}
+                            />
                           </td>
 
                           {/* Status Badge */}

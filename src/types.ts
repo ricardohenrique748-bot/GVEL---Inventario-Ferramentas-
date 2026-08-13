@@ -9,15 +9,22 @@ export type PageId =
 
 export type ToolStatus = 'available' | 'loaned' | 'repair' | 'lost';
 
+export interface Category {
+  id: string;
+  name: string;
+  codeLetter: string;
+}
+
 export interface ToolItem {
   id: string;
   code: string;
   qrCode: string;
   name: string;
-  category: 'Ferramentas Elétricas' | 'Ferramentas Manuais' | 'Equip. de Diagnóstico' | 'Automotivo Especializado';
+  category: string;
   brand: string;
   location: string;
   status: ToolStatus;
+  quantity: number;
   assignedTo?: string;
   assignedBay?: string;
   assignedPhotoUrl?: string;

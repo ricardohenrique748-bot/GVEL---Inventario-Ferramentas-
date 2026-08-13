@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.tools (
     brand TEXT NOT NULL,
     location TEXT NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('available', 'loaned', 'repair', 'lost')),
+    quantity INTEGER NOT NULL DEFAULT 1,
     assigned_to TEXT,
     assigned_bay TEXT,
     assigned_photo_url TEXT,
@@ -32,6 +33,9 @@ CREATE TABLE IF NOT EXISTS public.tools (
     photo_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Migração: adiciona a coluna quantity em bancos já existentes
+ALTER TABLE public.tools ADD COLUMN IF NOT EXISTS quantity INTEGER NOT NULL DEFAULT 1;
 
 -- 3. Tabela de Caixas dos Mecânicos
 CREATE TABLE IF NOT EXISTS public.mechanic_boxes (
@@ -74,20 +78,39 @@ CREATE TABLE IF NOT EXISTS public.alerts (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 6. Tabela de Categorias de Ferramentas
+CREATE TABLE IF NOT EXISTS public.categories (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    code_letter TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Habilitar leitura pública (Políticas RLS simplificadas para operação)
 ALTER TABLE public.people ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tools ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mechanic_boxes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Permitir acesso total a people" ON public.people FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acesso total a tools" ON public.tools FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acesso total a mechanic_boxes" ON public.mechanic_boxes FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acesso total a audit_logs" ON public.audit_logs FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acesso total a alerts" ON public.alerts FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir acesso total a categories" ON public.categories FOR ALL USING (true) WITH CHECK (true);
 
 -- Dados Iniciais (Seed Data)
+
+-- Inserir Categorias Iniciais
+INSERT INTO public.categories (id, name, code_letter)
+VALUES
+('cat-1', 'Ferramentas Elétricas', 'P'),
+('cat-2', 'Ferramentas Manuais', 'H'),
+('cat-3', 'Equip. de Diagnóstico', 'D'),
+('cat-4', 'Automotivo Especializado', 'S')
+ON CONFLICT (id) DO NOTHING;
 
 -- Inserir Usuário Administrador Ricardo + Equipe
 INSERT INTO public.people (id, name, registration, role, sector, username, email, password, active)
@@ -100,11 +123,11 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- Inserir Ferramentas Iniciais
-INSERT INTO public.tools (id, code, qr_code, name, category, brand, location, status, last_audit_date)
+INSERT INTO public.tools (id, code, qr_code, name, category, brand, location, status, quantity, last_audit_date)
 VALUES
-('t-1', 'TL-P-4092', 'QR-P4092-MIL', 'Chave de Impacto Milwaukee 1/2"', 'Ferramentas Elétricas', 'Milwaukee', 'Almoxarifado Principal - Prateleira B3', 'available', '2026-08-01'),
-('t-2', 'TL-D-1104', 'QR-D1104-SNP', 'Scanner Snap-On OBD2 PRO', 'Equip. de Diagnóstico', 'Snap-On', 'J. Smith (Baia 1)', 'loaned', '2026-08-04'),
-('t-3', 'TL-H-8831', 'QR-H8831-CFT', 'Torquímetro 1/2" Drive', 'Ferramentas Manuais', 'Craftsman', 'Laboratório de Calibração', 'repair', '2026-07-28'),
-('t-4', 'TL-P-2019', 'QR-P2019-DEW', 'Esmerilhadeira Angular DeWalt 20V', 'Ferramentas Elétricas', 'DeWalt', 'Almoxarifado Principal - Prateleira A1', 'available', '2026-08-02'),
-('t-5', 'TL-S-5042', 'QR-S5042-MAC', 'Ferramenta Pneumática de Pinça de Freio Mac Tools', 'Automotivo Especializado', 'Mac Tools', 'S. Connor (Baia 3)', 'loaned', '2026-08-05')
+('t-1', 'TL-P-4092', 'QR-P4092-MIL', 'Chave de Impacto Milwaukee 1/2"', 'Ferramentas Elétricas', 'Milwaukee', 'Almoxarifado Principal - Prateleira B3', 'available', 1, '2026-08-01'),
+('t-2', 'TL-D-1104', 'QR-D1104-SNP', 'Scanner Snap-On OBD2 PRO', 'Equip. de Diagnóstico', 'Snap-On', 'J. Smith (Baia 1)', 'loaned', 1, '2026-08-04'),
+('t-3', 'TL-H-8831', 'QR-H8831-CFT', 'Torquímetro 1/2" Drive', 'Ferramentas Manuais', 'Craftsman', 'Laboratório de Calibração', 'repair', 1, '2026-07-28'),
+('t-4', 'TL-P-2019', 'QR-P2019-DEW', 'Esmerilhadeira Angular DeWalt 20V', 'Ferramentas Elétricas', 'DeWalt', 'Almoxarifado Principal - Prateleira A1', 'available', 1, '2026-08-02'),
+('t-5', 'TL-S-5042', 'QR-S5042-MAC', 'Ferramenta Pneumática de Pinça de Freio Mac Tools', 'Automotivo Especializado', 'Mac Tools', 'S. Connor (Baia 3)', 'loaned', 1, '2026-08-05')
 ON CONFLICT (id) DO NOTHING;
