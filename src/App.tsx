@@ -623,7 +623,6 @@ export default function App() {
           isAdmin={isAdmin}
           onAddTool={handleAddTool}
           onAddCategory={handleAddCategory}
-          onDeleteTool={handleDeleteTool}
           onAddPerson={handleAddPerson}
         />
       )}

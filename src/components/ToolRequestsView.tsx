@@ -17,7 +17,6 @@ interface ToolRequestsViewProps {
   isAdmin?: boolean;
   onAddTool?: (newTool: Omit<ToolItem, 'id'>) => void;
   onAddCategory?: (name: string) => void;
-  onDeleteTool?: (toolId: string) => void;
   onAddPerson?: (person: Omit<Person, 'id'>) => void;
 }
 
@@ -29,7 +28,6 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
   isAdmin,
   onAddTool,
   onAddCategory,
-  onDeleteTool,
   onAddPerson,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -231,21 +229,6 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
                         )}
                       </div>
                     </button>
-
-                    {isAdmin && onDeleteTool && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm(`Excluir permanentemente "${tool.name}" (${tool.code})?`)) {
-                            onDeleteTool(tool.id);
-                          }
-                        }}
-                        title="Excluir ferramenta"
-                        className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-error text-on-error flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">delete</span>
-                      </button>
-                    )}
                   </div>
                 );
               })}
