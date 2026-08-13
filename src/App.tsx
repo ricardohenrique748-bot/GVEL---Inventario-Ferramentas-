@@ -24,8 +24,9 @@ import { QRScannerModal } from './components/QRScannerModal';
 
 import { supabase } from './lib/supabase';
 
+const SESSION_KEY = 'toolcontrol-session';
+
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<Person | null>(null);
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState<PageId>('dashboard');
   const [showScanner, setShowScanner] = useState(false);
@@ -62,6 +63,20 @@ export default function App() {
       }
     }
     return INITIAL_PEOPLE;
+  });
+
+  // Restore the logged-in session (if any) so a page refresh doesn't force a
+  // fresh login. Depends on `people` above, so it must be declared after it.
+  const [currentUser, setCurrentUser] = useState<Person | null>(() => {
+    try {
+      const savedId = localStorage.getItem(SESSION_KEY);
+      if (savedId) {
+        return people.find((p) => p.id === savedId && p.active) || null;
+      }
+    } catch (e) {
+      // fallback to logged-out state
+    }
+    return null;
   });
 
   // Supabase Data Sync Effect
@@ -247,6 +262,11 @@ export default function App() {
     } catch (e) {
       // fallback to local state
     }
+  };
+
+  const handleLock = () => {
+    setCurrentUser(null);
+    localStorage.removeItem(SESSION_KEY);
   };
 
   const handleUpdatePerson = async (id: string, updates: Partial<Person>) => {
@@ -445,6 +465,7 @@ export default function App() {
         onUnlock={(user) => {
           setCurrentUser(user);
           setCurrentPage('tool-requests');
+          localStorage.setItem(SESSION_KEY, user.id);
         }}
       />
     );
@@ -464,7 +485,7 @@ export default function App() {
           alerts={alerts}
           onNavigateToAlert={() => {}}
           currentUser={currentUser}
-          onLock={() => setCurrentUser(null)}
+          onLock={handleLock}
           fullWidth
         />
 
@@ -510,7 +531,7 @@ export default function App() {
           alerts={alerts}
           onNavigateToAlert={handleNavigateToAlert}
           currentUser={currentUser}
-          onLock={() => setCurrentUser(null)}
+          onLock={handleLock}
         />
 
         {/* View Router */}
