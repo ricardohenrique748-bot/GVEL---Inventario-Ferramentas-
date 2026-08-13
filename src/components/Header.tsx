@@ -155,7 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Help Modal */}
       {showHelpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-lg">
-          <div className="bg-surface-container rounded-xl shadow-2xl w-full max-w-[32rem] border border-outline-variant overflow-hidden animate-in zoom-in-95">
+          <div className="bg-surface-container rounded-xl shadow-2xl w-full max-w-[32rem] max-h-[92vh] border border-outline-variant overflow-y-auto animate-in zoom-in-95">
             <div className="p-lg border-b border-outline-variant flex justify-between items-center">
               <div className="flex items-center gap-sm">
                 <span className="material-symbols-outlined text-primary">support</span>

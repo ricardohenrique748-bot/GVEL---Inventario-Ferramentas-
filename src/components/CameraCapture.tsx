@@ -54,6 +54,11 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    // The live preview is mirrored (-scale-x-100) so framing feels natural,
+    // like a mirror. Mirror the capture too, so the saved photo matches what
+    // was actually seen on screen instead of coming out flipped.
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     onCapture(canvas.toDataURL('image/jpeg', 0.85));
     stopStream();

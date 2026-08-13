@@ -26,8 +26,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       isActive ? 'text-white' : 'text-white/50 hover:bg-white/[0.035] hover:text-white/85'
     }`;
 
-  const iconClasses = (isActive: boolean) =>
-    `material-symbols-outlined text-[18px] w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+  // The icon glyph and its centering box are kept on separate elements: the
+  // Material Symbols stylesheet sets its own `display` on `.material-symbols-outlined`,
+  // which otherwise wins the cascade over Tailwind's `flex` utility on the same
+  // element and silently breaks the centering.
+  const iconWrapClasses = (isActive: boolean) =>
+    `w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
       isActive
         ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
         : 'bg-white/[0.07] text-white/50 group-hover:bg-white/[0.1] group-hover:text-white/75'
@@ -75,7 +79,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className={itemClasses(isActive)}
             >
               {activeBar(isActive)}
-              <span className={iconClasses(isActive)}>{item.icon}</span>
+              <span className={iconWrapClasses(isActive)}>
+                <span className="material-symbols-outlined" style={{ fontSize: 18, lineHeight: 1 }}>{item.icon}</span>
+              </span>
               <span className={`min-w-0 truncate text-[13px] leading-tight ${isActive ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
             </a>
           );
@@ -94,7 +100,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className={itemClasses(currentPage === 'settings')}
         >
           {activeBar(currentPage === 'settings')}
-          <span className={iconClasses(currentPage === 'settings')}>settings</span>
+          <span className={iconWrapClasses(currentPage === 'settings')}>
+            <span className="material-symbols-outlined text-[18px] leading-none">settings</span>
+          </span>
           <span className={`min-w-0 truncate text-[13px] leading-tight ${currentPage === 'settings' ? 'font-semibold' : 'font-medium'}`}>Configurações</span>
         </a>
       </div>

@@ -11,7 +11,7 @@ interface PeopleManagementProps {
   isAdmin: boolean;
 }
 
-const ROLE_OPTIONS = ['Mecânico', 'Auxiliar de Mecânica', 'Supervisor', 'Almoxarife', 'Administrativo'];
+const ROLE_OPTIONS = ['Administrador', 'Mecânico', 'Auxiliar de Mecânica', 'Supervisor', 'Almoxarife', 'Administrativo'];
 
 const suggestUsername = (name: string) =>
   name
@@ -256,7 +256,7 @@ export const PeopleManagement: React.FC<PeopleManagementProps> = ({
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-lg">
-          <div className="bg-surface-container rounded-xl shadow-2xl w-full max-w-[32rem] border border-outline-variant/30 overflow-hidden animate-in zoom-in-95">
+          <div className="bg-surface-container rounded-xl shadow-2xl w-full max-w-[32rem] max-h-[92vh] border border-outline-variant/30 overflow-y-auto animate-in zoom-in-95">
             <div className="p-lg border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low">
               <h2 className="font-headline-md text-on-surface">
                 {editingId ? 'Editar pessoa' : 'Cadastrar pessoa'}

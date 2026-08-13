@@ -90,7 +90,7 @@ export const DamageLossView: React.FC<DamageLossViewProps> = ({
 
       {showReportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-lg">
-          <div className="bg-surface-container rounded-xl shadow-2xl w-full max-w-[32rem] border border-outline-variant/30 overflow-hidden">
+          <div className="bg-surface-container rounded-xl shadow-2xl w-full max-w-[32rem] max-h-[92vh] border border-outline-variant/30 overflow-y-auto">
             <div className="p-lg border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low">
               <h2 className="font-headline-md text-on-surface flex items-center gap-2">
                 <span className="material-symbols-outlined text-error">report</span>

@@ -33,7 +33,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-md p-lg select-none">
-      <div className="bg-surface-container rounded-2xl shadow-2xl w-full max-w-[32rem] border border-outline-variant/30 overflow-hidden animate-in zoom-in-95">
+      <div className="bg-surface-container rounded-2xl shadow-2xl w-full max-w-[32rem] max-h-[92vh] border border-outline-variant/30 overflow-y-auto animate-in zoom-in-95">
         {/* Modal Header */}
         <div className="p-lg border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low">
           <div className="flex items-center gap-sm">

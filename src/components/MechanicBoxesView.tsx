@@ -308,7 +308,7 @@ export const MechanicBoxesView: React.FC<MechanicBoxesViewProps> = ({
       {/* Modal: Quick Audit Drawer */}
       {activeAuditBox && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-lg">
-          <div className="bg-surface-container rounded-xl shadow-2xl w-full max-w-[36rem] border border-outline-variant/30 overflow-hidden animate-in zoom-in-95">
+          <div className="bg-surface-container rounded-xl shadow-2xl w-full max-w-[36rem] max-h-[92vh] border border-outline-variant/30 overflow-y-auto animate-in zoom-in-95">
             <div className="p-lg border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low">
               <div>
                 <h2 className="font-headline-md text-headline-md text-on-surface">
@@ -382,7 +382,7 @@ export const MechanicBoxesView: React.FC<MechanicBoxesViewProps> = ({
       {/* Modal: Register Box */}
       {showRegisterModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-lg">
-          <div className="bg-surface-container rounded-xl shadow-2xl w-full max-w-[28rem] border border-outline-variant/30 overflow-hidden animate-in zoom-in-95">
+          <div className="bg-surface-container rounded-xl shadow-2xl w-full max-w-[28rem] max-h-[92vh] border border-outline-variant/30 overflow-y-auto animate-in zoom-in-95">
             <div className="p-lg border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low">
               <h2 className="font-headline-md text-headline-md text-on-surface">Registrar nova caixa</h2>
               <button
