@@ -223,18 +223,54 @@ export default function App() {
     showToast(`${newBox.boxNumber} registrada para ${newBox.mechanicName}`);
   };
 
-  const handleAddPerson = (newPersonData: Omit<Person, 'id'>) => {
+  const handleAddPerson = async (newPersonData: Omit<Person, 'id'>) => {
     const newPerson: Person = {
       ...newPersonData,
       id: `p-${Date.now()}`,
     };
     setPeople((prev) => [newPerson, ...prev]);
     showToast(`Pessoa cadastrada: ${newPerson.name} (usuário: ${newPerson.username})`);
+
+    try {
+      await supabase.from('people').insert({
+        id: newPerson.id,
+        name: newPerson.name,
+        registration: newPerson.registration,
+        role: newPerson.role,
+        sector: newPerson.sector,
+        username: newPerson.username,
+        email: newPerson.email,
+        password: newPerson.password,
+        active: newPerson.active,
+        photo_url: newPerson.photoUrl,
+      });
+    } catch (e) {
+      // fallback to local state
+    }
   };
 
-  const handleUpdatePerson = (id: string, updates: Partial<Person>) => {
+  const handleUpdatePerson = async (id: string, updates: Partial<Person>) => {
     setPeople((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
     showToast('Cadastro atualizado.');
+
+    try {
+      await supabase
+        .from('people')
+        .update({
+          name: updates.name,
+          registration: updates.registration,
+          role: updates.role,
+          sector: updates.sector,
+          username: updates.username,
+          email: updates.email,
+          password: updates.password,
+          active: updates.active,
+          photo_url: updates.photoUrl,
+        })
+        .eq('id', id);
+    } catch (e) {
+      // fallback to local state
+    }
   };
 
   const handleTogglePersonActive = (id: string) => {
@@ -440,6 +476,7 @@ export default function App() {
             isAdmin={currentUser.role === 'Administrador'}
             onAddTool={handleAddTool}
             onDeleteTool={handleDeleteTool}
+            onAddPerson={handleAddPerson}
           />
         </main>
       </div>

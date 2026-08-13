@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ToolItem } from '../types';
+import { Person, ToolItem } from '../types';
 import { CameraCapture } from './CameraCapture';
 import { AddToolModal } from './AddToolModal';
+import { PersonFormModal } from './PersonFormModal';
 
 interface ToolRequestsViewProps {
   tools: ToolItem[];
@@ -15,6 +16,7 @@ interface ToolRequestsViewProps {
   isAdmin?: boolean;
   onAddTool?: (newTool: Omit<ToolItem, 'id'>) => void;
   onDeleteTool?: (toolId: string) => void;
+  onAddPerson?: (person: Omit<Person, 'id'>) => void;
 }
 
 export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
@@ -24,12 +26,14 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
   isAdmin,
   onAddTool,
   onDeleteTool,
+  onAddPerson,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedToolIds, setSelectedToolIds] = useState<string[]>([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showAddToolModal, setShowAddToolModal] = useState(false);
+  const [showAddPersonModal, setShowAddPersonModal] = useState(false);
   const [requesterName, setRequesterName] = useState('');
   const [requesterBay, setRequesterBay] = useState('');
   const [proofPhoto, setProofPhoto] = useState<string | null>(null);
@@ -84,21 +88,34 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
   return (
     <div className="flex flex-col w-full h-full pb-32 select-none animate-in fade-in duration-300">
       {/* Top Header */}
-      <div className="px-lg flex items-center justify-between mb-lg pt-lg">
+      <div className="px-lg flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between mb-lg pt-lg">
         <div className="flex flex-col">
           <h1 className="font-headline-lg text-on-background">Solicitação de Ferramentas</h1>
           <p className="font-body-sm text-on-surface-variant mt-xs">
             Selecione as ferramentas disponíveis no estoque para registrar a retirada.
           </p>
         </div>
-        {isAdmin && onAddTool && (
-          <button
-            onClick={() => setShowAddToolModal(true)}
-            className="flex items-center gap-sm px-lg py-sm rounded-lg bg-primary hover:bg-primary/90 text-on-primary transition-colors font-label-md shrink-0"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            Cadastrar Ferramenta
-          </button>
+        {isAdmin && (onAddTool || onAddPerson) && (
+          <div className="flex flex-wrap items-center gap-sm shrink-0">
+            {onAddTool && (
+              <button
+                onClick={() => setShowAddToolModal(true)}
+                className="flex items-center gap-sm px-lg py-sm rounded-lg bg-primary hover:bg-primary/90 text-on-primary transition-colors font-label-md"
+              >
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                Cadastrar Ferramenta
+              </button>
+            )}
+            {onAddPerson && (
+              <button
+                onClick={() => setShowAddPersonModal(true)}
+                className="flex items-center gap-sm px-lg py-sm rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface transition-colors font-label-md border border-outline-variant/30"
+              >
+                <span className="material-symbols-outlined text-[18px]">person_add</span>
+                Cadastrar Usuário
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -406,6 +423,11 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
       {/* Modal: Add Tool (admin only) */}
       {showAddToolModal && onAddTool && (
         <AddToolModal onClose={() => setShowAddToolModal(false)} onAddTool={onAddTool} />
+      )}
+
+      {/* Modal: Add Person (admin only) */}
+      {showAddPersonModal && onAddPerson && (
+        <PersonFormModal onClose={() => setShowAddPersonModal(false)} onAddPerson={onAddPerson} />
       )}
     </div>
   );
