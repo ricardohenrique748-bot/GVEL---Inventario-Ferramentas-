@@ -28,14 +28,16 @@ CREATE TABLE IF NOT EXISTS public.tools (
     quantity INTEGER NOT NULL DEFAULT 1,
     assigned_to TEXT,
     assigned_bay TEXT,
+    assigned_plate TEXT,
     assigned_photo_url TEXT,
     last_audit_date DATE,
     photo_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Migração: adiciona a coluna quantity em bancos já existentes
+-- Migração: adiciona colunas em bancos já existentes
 ALTER TABLE public.tools ADD COLUMN IF NOT EXISTS quantity INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE public.tools ADD COLUMN IF NOT EXISTS assigned_plate TEXT;
 
 -- 3. Tabela de Caixas dos Mecânicos
 CREATE TABLE IF NOT EXISTS public.mechanic_boxes (

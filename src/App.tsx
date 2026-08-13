@@ -128,6 +128,7 @@ export default function App() {
             quantity: t.quantity ?? 1,
             assignedTo: t.assigned_to,
             assignedBay: t.assigned_bay,
+            assignedPlate: t.assigned_plate,
             assignedPhotoUrl: t.assigned_photo_url,
             lastAuditDate: t.last_audit_date,
             photoUrl: t.photo_url,
@@ -432,34 +433,63 @@ export default function App() {
     showToast(`Pessoa excluída: ${target.name}`);
   };
 
-  const handleRequestTools = (
+  const handleRequestTools = async (
     toolIds: string[],
     requesterName: string,
     requesterBay: string,
-    proofPhotoUrl: string
+    proofPhotoUrl: string,
+    quantities: Record<string, number>,
+    plate: string
   ) => {
     const requestedTools = tools.filter((t) => toolIds.includes(t.id));
     const assignedTo = requesterBay ? `${requesterName} (${requesterBay})` : requesterName;
+    const plateTrimmed = plate.trim().toUpperCase();
+
+    const takenAmount = (t: ToolItem) =>
+      Math.min(Math.max(1, Math.floor(quantities[t.id] || 1)), t.quantity);
+
+    const updatedTools: ToolItem[] = requestedTools.map((t) => {
+      const remaining = t.quantity - takenAmount(t);
+      return remaining > 0
+        ? { ...t, quantity: remaining }
+        : {
+            ...t,
+            quantity: 0,
+            status: 'loaned',
+            assignedTo,
+            assignedBay: requesterBay || undefined,
+            assignedPlate: plateTrimmed || undefined,
+            assignedPhotoUrl: proofPhotoUrl,
+          };
+    });
 
     setTools((prev) =>
-      prev.map((t) =>
-        toolIds.includes(t.id)
-          ? {
-              ...t,
-              status: 'loaned',
-              assignedTo,
-              assignedBay: requesterBay || undefined,
-              assignedPhotoUrl: proofPhotoUrl,
-            }
-          : t
-      )
+      prev.map((t) => updatedTools.find((u) => u.id === t.id) || t)
     );
+
+    for (const t of updatedTools) {
+      try {
+        await supabase
+          .from('tools')
+          .update({
+            quantity: t.quantity,
+            status: t.status,
+            assigned_to: t.assignedTo,
+            assigned_bay: t.assignedBay,
+            assigned_plate: t.assignedPlate,
+            assigned_photo_url: t.assignedPhotoUrl,
+          })
+          .eq('id', t.id);
+      } catch (e) {
+        // fallback to local state
+      }
+    }
 
     requestedTools.forEach((t) => {
       addAuditLog(
         'Empréstimo',
         'Ferramenta Solicitada',
-        `${t.name} (${t.code}) retirada por ${assignedTo}`,
+        `${takenAmount(t)}x ${t.name} (${t.code}) retirada por ${assignedTo}${plateTrimmed ? ` • Placa: ${plateTrimmed}` : ''}`,
         t.code,
         'primary',
         proofPhotoUrl

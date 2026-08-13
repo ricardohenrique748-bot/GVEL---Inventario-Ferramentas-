@@ -12,7 +12,9 @@ interface ToolRequestsViewProps {
     toolIds: string[],
     requesterName: string,
     requesterBay: string,
-    proofPhotoUrl: string
+    proofPhotoUrl: string,
+    quantities: Record<string, number>,
+    plate: string
   ) => void;
   isAdmin?: boolean;
   onAddTool?: (newTool: Omit<ToolItem, 'id'>) => void;
@@ -38,7 +40,9 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
   const [showAddPersonModal, setShowAddPersonModal] = useState(false);
   const [requesterName, setRequesterName] = useState('');
   const [requesterBay, setRequesterBay] = useState('');
+  const [requesterPlate, setRequesterPlate] = useState('');
   const [proofPhoto, setProofPhoto] = useState<string | null>(null);
+  const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
 
   const availableTools = tools.filter((t) => {
     if (t.status !== 'available') return false;
@@ -66,18 +70,41 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
   const selectedTools = tools.filter((t) => selectedToolIds.includes(t.id));
 
   const toggleTool = (toolId: string) => {
+    const isSelected = selectedToolIds.includes(toolId);
     setSelectedToolIds((prev) =>
-      prev.includes(toolId) ? prev.filter((id) => id !== toolId) : [...prev, toolId]
+      isSelected ? prev.filter((id) => id !== toolId) : [...prev, toolId]
     );
+    setSelectedQuantities((prev) => {
+      if (isSelected) {
+        const next = { ...prev };
+        delete next[toolId];
+        return next;
+      }
+      return { ...prev, [toolId]: 1 };
+    });
+  };
+
+  const updateSelectedQuantity = (toolId: string, quantity: number, max: number) => {
+    const clamped = Math.min(Math.max(1, Math.floor(quantity) || 1), Math.max(1, max));
+    setSelectedQuantities((prev) => ({ ...prev, [toolId]: clamped }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedToolIds.length === 0 || !requesterName.trim() || !proofPhoto) return;
-    onRequestTools(selectedToolIds, requesterName.trim(), requesterBay.trim(), proofPhoto);
+    onRequestTools(
+      selectedToolIds,
+      requesterName.trim(),
+      requesterBay.trim(),
+      proofPhoto,
+      selectedQuantities,
+      requesterPlate.trim()
+    );
     setSelectedToolIds([]);
+    setSelectedQuantities({});
     setRequesterName('');
     setRequesterBay('');
+    setRequesterPlate('');
     setProofPhoto(null);
     setShowRequestModal(false);
   };
@@ -248,12 +275,13 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
                     <th className="py-sm px-md font-label-md text-on-surface-variant">Código</th>
                     <th className="py-sm px-md font-label-md text-on-surface-variant">Ferramenta</th>
                     <th className="py-sm px-md font-label-md text-on-surface-variant">Com quem está</th>
+                    <th className="py-sm px-md font-label-md text-on-surface-variant">Placa</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/10">
                   {loanedTools.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-lg text-center text-on-surface-variant font-body-sm">
+                      <td colSpan={5} className="py-lg text-center text-on-surface-variant font-body-sm">
                         Nenhuma ferramenta emprestada no momento.
                       </td>
                     </tr>
@@ -280,6 +308,9 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
                         <td className="py-sm px-md font-body-sm text-on-surface-variant">
                           {tool.assignedTo || '—'}
                         </td>
+                        <td className="py-sm px-md font-body-sm text-on-surface-variant uppercase">
+                          {tool.assignedPlate || '—'}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -292,7 +323,7 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
 
       {/* Sticky selection bar */}
       {selectedToolIds.length > 0 && (
-        <div className="fixed bottom-0 left-0 lg:left-[17rem] right-0 z-30 bg-surface-container shadow-2xl border-t border-outline-variant px-lg py-md flex items-center justify-between animate-in slide-in-from-bottom-3">
+        <div className="fixed bottom-16 lg:bottom-0 left-0 lg:left-[17rem] right-0 z-50 bg-surface-container shadow-2xl border-t border-outline-variant px-lg py-md flex items-center justify-between animate-in slide-in-from-bottom-3">
           <span className="font-label-md text-on-surface flex items-center gap-sm">
             <span className="material-symbols-outlined text-primary text-[20px]">shopping_cart_checkout</span>
             {selectedToolIds.length} ferramenta{selectedToolIds.length > 1 ? 's' : ''} selecionada{selectedToolIds.length > 1 ? 's' : ''}
@@ -335,22 +366,35 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
 
               <div className="flex flex-col gap-xs">
                 <label className="font-label-sm text-on-surface-variant">Ferramentas selecionadas</label>
-                <div className="flex flex-col gap-xs max-h-40 overflow-y-auto">
+                <div className="flex flex-col gap-xs max-h-48 overflow-y-auto">
                   {selectedTools.map((tool) => (
                     <div
                       key={tool.id}
-                      className="flex items-center justify-between bg-surface-container-high rounded-lg px-md py-sm"
+                      className="flex items-center justify-between gap-sm bg-surface-container-high rounded-lg px-md py-sm"
                     >
-                      <span className="font-body-sm text-on-surface">
+                      <span className="font-body-sm text-on-surface min-w-0 truncate">
                         {tool.name} <span className="text-on-surface-variant">({tool.code})</span>
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleTool(tool.id)}
-                        className="text-on-surface-variant hover:text-error transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">close</span>
-                      </button>
+                      <div className="flex items-center gap-xs shrink-0">
+                        <input
+                          type="number"
+                          min={1}
+                          max={tool.quantity}
+                          title={`Disponível: ${tool.quantity}`}
+                          value={selectedQuantities[tool.id] ?? 1}
+                          onChange={(e) =>
+                            updateSelectedQuantity(tool.id, Number(e.target.value), tool.quantity)
+                          }
+                          className="w-14 text-center bg-surface-container border border-outline-variant/30 rounded py-0.5 text-body-sm text-on-surface outline-none focus:border-primary"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => toggleTool(tool.id)}
+                          className="text-on-surface-variant hover:text-error transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">close</span>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -382,6 +426,18 @@ export const ToolRequestsView: React.FC<ToolRequestsViewProps> = ({
                   onChange={(e) => setRequesterBay(e.target.value)}
                   placeholder="ex: Baia 3"
                   className="w-full bg-surface-container-high border-b-2 border-outline-variant focus:border-primary px-md py-sm text-body-md text-on-surface outline-none"
+                />
+              </div>
+
+              <div className="flex flex-col gap-xs">
+                <label className="font-label-sm text-on-surface-variant">Placa do veículo</label>
+                <input
+                  type="text"
+                  value={requesterPlate}
+                  onChange={(e) => setRequesterPlate(e.target.value.toUpperCase())}
+                  placeholder="ex: ABC1D23"
+                  maxLength={8}
+                  className="w-full bg-surface-container-high border-b-2 border-outline-variant focus:border-primary px-md py-sm text-body-md text-on-surface outline-none uppercase"
                 />
               </div>
 

@@ -27,6 +27,7 @@ export interface ToolItem {
   quantity: number;
   assignedTo?: string;
   assignedBay?: string;
+  assignedPlate?: string;
   assignedPhotoUrl?: string;
   lastAuditDate?: string;
   photoUrl?: string;
