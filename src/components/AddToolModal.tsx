@@ -222,7 +222,7 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onAddTool, 
             <select
               value={showNewCategoryForm ? NEW_CATEGORY_OPTION : newToolCategory}
               onChange={(e) => handleCategorySelectChange(e.target.value)}
-              className="w-full bg-surface-container-high border-b-2 border-outline-variant focus:border-primary px-md py-sm text-body-md text-on-surface outline-none cursor-pointer"
+              className="w-full bg-surface-container-high border-b-2 border-outline-variant focus:border-primary px-md py-sm text-body-md text-on-surface outline-none cursor-pointer uppercase"
             >
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.name}>{cat.name}</option>

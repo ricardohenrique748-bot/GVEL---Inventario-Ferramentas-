@@ -212,7 +212,7 @@ export const EstoqueView: React.FC<EstoqueViewProps> = ({
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-surface-container-high border border-outline-variant/30 text-on-surface font-body-md text-body-md rounded-lg py-sm px-md focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer"
+              className="w-full bg-surface-container-high border border-outline-variant/30 text-on-surface font-body-md text-body-md rounded-lg py-sm px-md focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer uppercase"
             >
               <option value="all">Todas as Categorias</option>
               {categories.map((cat) => (
