@@ -78,27 +78,49 @@ export const AddToolModal: React.FC<AddToolModalProps> = ({ onClose, onAddTool }
               Foto da ferramenta
             </label>
             <div className="flex items-center gap-md">
-              <label
-                htmlFor="tool-photo-input"
-                className="w-20 h-20 shrink-0 rounded-lg border-2 border-dashed border-outline-variant hover:border-primary bg-surface-container-high flex items-center justify-center cursor-pointer overflow-hidden transition-colors"
-              >
+              <div className="w-20 h-20 shrink-0 rounded-lg border-2 border-dashed border-outline-variant bg-surface-container-high flex items-center justify-center overflow-hidden">
                 {newToolPhoto ? (
                   <img src={newToolPhoto} alt="Pré-visualização da ferramenta" className="w-full h-full object-cover" />
                 ) : (
                   <span className="material-symbols-outlined text-on-surface-variant text-[28px]">add_a_photo</span>
                 )}
-              </label>
-              <input
-                id="tool-photo-input"
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                className="hidden"
-              />
-              <div className="flex flex-col gap-xs">
-                <span className="font-body-sm text-on-surface-variant">
-                  {newToolPhoto ? 'Foto selecionada.' : 'Clique no quadro para escolher uma imagem.'}
-                </span>
+              </div>
+              <div className="flex flex-col gap-xs flex-1">
+                {/* Two separate inputs: one forces the camera app (capture),
+                    the other opens the gallery/file picker (no capture attr) — a
+                    plain file input alone doesn't reliably offer a camera option
+                    on Android WebView. */}
+                <div className="flex gap-xs">
+                  <label
+                    htmlFor="tool-photo-camera"
+                    className="flex items-center gap-xs px-md py-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-sm cursor-pointer border border-outline-variant/30 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">photo_camera</span>
+                    Tirar foto
+                  </label>
+                  <input
+                    id="tool-photo-camera"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="tool-photo-gallery"
+                    className="flex items-center gap-xs px-md py-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-sm cursor-pointer border border-outline-variant/30 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">photo_library</span>
+                    Galeria
+                  </label>
+                  <input
+                    id="tool-photo-gallery"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                </div>
                 {newToolPhoto && (
                   <button
                     type="button"

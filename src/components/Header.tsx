@@ -143,10 +143,10 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <button
               onClick={onLock}
-              title="Bloquear sessão"
+              title="Sair / Bloquear sessão"
               className="w-9 h-9 flex items-center justify-center hover:bg-surface-container-high rounded-lg text-on-surface-variant hover:text-error transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px]">lock</span>
+              <span className="material-symbols-outlined text-[18px]">logout</span>
             </button>
           </div>
         </div>
