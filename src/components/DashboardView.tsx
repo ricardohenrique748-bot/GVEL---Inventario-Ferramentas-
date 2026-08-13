@@ -1,8 +1,12 @@
 import React from 'react';
-import { PageId, AuditLogItem, Person } from '../types';
+import { PageId, AuditLogItem, Person, ToolItem, MechanicBox, ToolStatus } from '../types';
+import { STATUS_LABELS } from '../labels';
 
 interface DashboardViewProps {
   currentUser: Person;
+  tools: ToolItem[];
+  mechanicBoxes: MechanicBox[];
+  people: Person[];
   onNavigate: (page: PageId) => void;
   auditLogs: AuditLogItem[];
   onOpenScanner: () => void;
@@ -25,32 +29,74 @@ const activityColor: Record<AuditLogItem['statusColor'], { bg: string; fg: strin
   tertiary: { bg: 'bg-tertiary-container', fg: 'text-on-tertiary-container' },
 };
 
-const weeklyMovement = [
-  { label: 'Sem 1', value: 2400 },
-  { label: 'Sem 2', value: 3100 },
-  { label: 'Sem 3', value: 3800 },
-  { label: 'Sem 4', value: 4200 },
-];
+const STATUS_ORDER: ToolStatus[] = ['available', 'loaned', 'repair', 'lost'];
 
-const categoryBreakdown = [
-  { label: 'Ferramentas Elétricas', pct: 38, color: 'bg-primary', dot: 'bg-primary' },
-  { label: 'Ferramentas Manuais', pct: 27, color: 'bg-[#0891B2]', dot: 'bg-[#0891B2]' },
-  { label: 'Equip. de Diagnóstico', pct: 21, color: 'bg-secondary', dot: 'bg-secondary' },
-  { label: 'Automotivo Especializado', pct: 14, color: 'bg-tertiary', dot: 'bg-tertiary' },
-];
+const STATUS_BAR_COLOR: Record<ToolStatus, string> = {
+  available: 'bg-primary',
+  loaned: 'bg-secondary',
+  repair: 'bg-tertiary',
+  lost: 'bg-error',
+};
 
-const frequentMechanics = ['JM', 'SC', 'AR', 'MC', 'RD'];
+const CATEGORY_COLOR: Record<ToolItem['category'], string> = {
+  'Ferramentas Elétricas': 'bg-primary',
+  'Ferramentas Manuais': 'bg-[#0891B2]',
+  'Equip. de Diagnóstico': 'bg-secondary',
+  'Automotivo Especializado': 'bg-tertiary',
+};
+
+const initials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
 
 const CARD = 'bg-surface-container rounded-[28px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]';
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   currentUser,
+  tools,
+  mechanicBoxes,
+  people,
   onNavigate,
   auditLogs,
   onOpenScanner,
 }) => {
-  const maxMovement = Math.max(...weeklyMovement.map((w) => w.value));
-  const currentIndex = weeklyMovement.length - 1;
+  const statusCounts = STATUS_ORDER.map((status) => ({
+    status,
+    label: STATUS_LABELS[status],
+    count: tools.filter((t) => t.status === status).length,
+  }));
+  const maxStatusCount = Math.max(1, ...statusCounts.map((s) => s.count));
+
+  const incompleteBoxes = mechanicBoxes.filter((b) => b.status === 'incomplete').length;
+  const auditCount = auditLogs.filter((l) => l.type === 'Auditoria de Caixa').length;
+  const openOccurrences = tools.filter((t) => t.status === 'repair' || t.status === 'lost').length;
+
+  const avgCompliance =
+    mechanicBoxes.length > 0
+      ? Math.round(mechanicBoxes.reduce((sum, b) => sum + b.compliancePercentage, 0) / mechanicBoxes.length)
+      : null;
+
+  const categoryTotals: Partial<Record<ToolItem['category'], number>> = {};
+  tools.forEach((t) => {
+    categoryTotals[t.category] = (categoryTotals[t.category] || 0) + 1;
+  });
+  const categoryBreakdown = (Object.keys(categoryTotals) as ToolItem['category'][])
+    .map((label) => ({
+      label,
+      pct: Math.round(((categoryTotals[label] || 0) / tools.length) * 100),
+      color: CATEGORY_COLOR[label],
+    }))
+    .sort((a, b) => b.pct - a.pct);
+
+  const frequentMechanics = people
+    .filter((p) => p.active && p.role !== 'Administrador')
+    .slice(0, 5);
 
   const quickActions: { icon: string; label: string; onClick: () => void }[] = [
     { icon: 'qr_code_scanner', label: 'Escanear', onClick: onOpenScanner },
@@ -62,22 +108,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     {
       icon: 'inventory_2',
       title: 'Caixas incompletas',
-      subtitle: '2 · Verificação pendente',
+      subtitle: mechanicBoxes.length === 0 ? 'Nenhuma caixa cadastrada' : `${incompleteBoxes} · Verificação pendente`,
       urgent: false,
       onClick: () => onNavigate('mechanic-boxes'),
     },
     {
       icon: 'fact_check',
-      title: 'Auditorias (7 dias)',
-      subtitle: '12 · 4 desde ontem',
+      title: 'Auditorias registradas',
+      subtitle: auditCount === 0 ? 'Nenhuma auditoria ainda' : `${auditCount} no total`,
       urgent: false,
       onClick: () => onNavigate('mechanic-boxes'),
     },
     {
       icon: 'report_problem',
       title: 'Ocorrências abertas',
-      subtitle: '2 · Ação necessária',
-      urgent: true,
+      subtitle: openOccurrences === 0 ? 'Nenhuma ocorrência aberta' : `${openOccurrences} · Ação necessária`,
+      urgent: openOccurrences > 0,
       onClick: () => onNavigate('damage-loss'),
     },
   ];
@@ -122,39 +168,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* Overview + bar chart */}
+          {/* Overview + status bar chart */}
           <div className={`lg:col-span-4 ${CARD} p-lg flex flex-col`}>
             <div className="flex items-start justify-between mb-md">
               <div>
                 <p className="font-label-md text-on-surface-variant mb-xs">Total de ativos</p>
-                <p className="font-display-lg text-on-surface leading-none">12.450</p>
-                <div className="flex items-center gap-xs text-primary mt-sm">
-                  <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                  <span className="font-label-sm">+125 esta semana</span>
-                </div>
+                <p className="font-display-lg text-on-surface leading-none">{tools.length}</p>
               </div>
             </div>
 
-            <div className="flex items-end justify-between gap-md h-28 mt-auto px-sm">
-              {weeklyMovement.map((week, i) => {
-                const isCurrent = i === currentIndex;
-                const heightPx = Math.max(20, Math.round((week.value / maxMovement) * 96));
-                return (
-                  <div key={week.label} className="flex-1 flex flex-col items-center gap-xs">
-                    {isCurrent && (
-                      <span className="font-label-sm text-on-primary bg-primary px-sm py-0.5 rounded-full whitespace-nowrap">
-                        {(week.value / 1000).toFixed(1)}mil
-                      </span>
-                    )}
-                    <div
-                      className={`w-5 rounded-full ${isCurrent ? 'bg-primary' : 'bg-surface-container-highest'}`}
-                      style={{ height: `${heightPx}px` }}
-                    />
-                    <span className="font-label-sm text-on-surface-variant">{week.label}</span>
-                  </div>
-                );
-              })}
-            </div>
+            {tools.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-center px-sm">
+                <p className="font-body-sm text-on-surface-variant">
+                  Nenhuma ferramenta cadastrada ainda.
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-end justify-between gap-md h-28 mt-auto px-sm">
+                {statusCounts.map(({ status, label, count }) => {
+                  const heightPx = count === 0 ? 4 : Math.max(20, Math.round((count / maxStatusCount) * 96));
+                  return (
+                    <div key={status} className="flex-1 flex flex-col items-center gap-xs">
+                      <span className="font-label-sm text-on-surface">{count}</span>
+                      <div
+                        className={`w-5 rounded-full ${count > 0 ? STATUS_BAR_COLOR[status] : 'bg-surface-container-highest'}`}
+                        style={{ height: `${heightPx}px` }}
+                      />
+                      <span className="font-label-sm text-on-surface-variant text-center">{label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Compliance gauge */}
@@ -169,22 +214,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   stroke="currentColor"
                   strokeWidth="3.2"
                 />
-                <path
-                  className="text-primary"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeDasharray="96, 100"
-                  strokeWidth="3.2"
-                  strokeLinecap="round"
-                />
+                {avgCompliance !== null && (
+                  <path
+                    className="text-primary"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeDasharray={`${avgCompliance}, 100`}
+                    strokeWidth="3.2"
+                    strokeLinecap="round"
+                  />
+                )}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-headline-md text-on-surface">96%</span>
+                <span className="font-headline-md text-on-surface">
+                  {avgCompliance !== null ? `${avgCompliance}%` : '—'}
+                </span>
               </div>
             </div>
             <p className="font-body-sm text-on-surface-variant text-center mt-md">
-              Últimos 30 dias
+              {mechanicBoxes.length > 0 ? 'Baseado nas caixas cadastradas' : 'Nenhuma caixa auditada ainda'}
             </p>
           </div>
 
@@ -193,7 +242,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-headline-sm">Pendências</p>
-                <p className="font-label-sm text-inverse-on-surface/50">Turno atual · OPERADOR-42</p>
+                <p className="font-label-sm text-inverse-on-surface/50">Turno atual · {currentUser.name}</p>
               </div>
               <span className="bg-primary text-on-primary font-label-sm px-sm py-xs rounded-full shrink-0">
                 {pendingItems.length} itens
@@ -243,46 +292,57 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <div className="mt-auto">
               <p className="font-label-sm text-inverse-on-surface/50 mb-sm">Mecânicos frequentes</p>
-              <div className="flex items-center gap-xs">
-                {frequentMechanics.map((initials, i) => (
-                  <div
-                    key={initials}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-label-sm text-[10px] border-2 border-inverse-surface ${
-                      i % 2 === 0 ? 'bg-primary-container text-on-primary-container' : 'bg-tertiary-container text-on-tertiary-container'
-                    } ${i > 0 ? '-ml-2' : ''}`}
+              {frequentMechanics.length === 0 ? (
+                <p className="font-label-sm text-inverse-on-surface/40">Nenhum mecânico cadastrado ainda.</p>
+              ) : (
+                <div className="flex items-center gap-xs">
+                  {frequentMechanics.map((person, i) => (
+                    <div
+                      key={person.id}
+                      title={person.name}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-label-sm text-[10px] border-2 border-inverse-surface ${
+                        i % 2 === 0 ? 'bg-primary-container text-on-primary-container' : 'bg-tertiary-container text-on-tertiary-container'
+                      } ${i > 0 ? '-ml-2' : ''}`}
+                    >
+                      {initials(person.name)}
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => onNavigate('mechanic-boxes')}
+                    className="w-8 h-8 -ml-2 rounded-full bg-inverse-on-surface/10 border-2 border-inverse-surface flex items-center justify-center text-inverse-on-surface/70 hover:text-primary transition-colors"
                   >
-                    {initials}
-                  </div>
-                ))}
-                <button
-                  onClick={() => onNavigate('mechanic-boxes')}
-                  className="w-8 h-8 -ml-2 rounded-full bg-inverse-on-surface/10 border-2 border-inverse-surface flex items-center justify-center text-inverse-on-surface/70 hover:text-primary transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[14px]">add</span>
-                </button>
-              </div>
+                    <span className="material-symbols-outlined text-[14px]">add</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Category distribution — wide, second row */}
           <div className={`lg:col-span-8 ${CARD} p-lg`}>
             <p className="font-label-md text-on-surface-variant mb-md">Distribuição por categoria</p>
-            <div className="flex gap-[2px] h-2.5 rounded-full overflow-hidden mb-md">
-              {categoryBreakdown.map((cat) => (
-                <div key={cat.label} className={cat.color} style={{ width: `${cat.pct}%` }} />
-              ))}
-            </div>
-            <div className="grid grid-cols-2 gap-x-lg gap-y-sm">
-              {categoryBreakdown.map((cat) => (
-                <div key={cat.label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-sm min-w-0">
-                    <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${cat.dot}`} />
-                    <span className="font-body-sm text-on-surface truncate">{cat.label}</span>
-                  </div>
-                  <span className="font-label-sm text-on-surface-variant shrink-0">{cat.pct}%</span>
+            {categoryBreakdown.length === 0 ? (
+              <p className="font-body-sm text-on-surface-variant">Nenhuma ferramenta cadastrada ainda.</p>
+            ) : (
+              <>
+                <div className="flex gap-[2px] h-2.5 rounded-full overflow-hidden mb-md">
+                  {categoryBreakdown.map((cat) => (
+                    <div key={cat.label} className={cat.color} style={{ width: `${cat.pct}%` }} />
+                  ))}
                 </div>
-              ))}
-            </div>
+                <div className="grid grid-cols-2 gap-x-lg gap-y-sm">
+                  {categoryBreakdown.map((cat) => (
+                    <div key={cat.label} className="flex items-center justify-between">
+                      <div className="flex items-center gap-sm min-w-0">
+                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${cat.color}`} />
+                        <span className="font-body-sm text-on-surface truncate">{cat.label}</span>
+                      </div>
+                      <span className="font-label-sm text-on-surface-variant shrink-0">{cat.pct}%</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -297,32 +357,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               Ver histórico completo
             </button>
           </div>
-          <div className="flex flex-col">
-            {auditLogs.slice(0, 6).map((log) => {
-              const colors = activityColor[log.statusColor] ?? activityColor.primary;
-              return (
-                <div
-                  key={log.id}
-                  onClick={() => onNavigate('audit-logs')}
-                  className="flex items-center gap-md py-sm border-b border-outline-variant last:border-0 cursor-pointer hover:bg-surface-container-high/60 -mx-sm px-sm rounded-lg transition-colors"
-                >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${colors.bg} ${colors.fg}`}>
-                    <span className="material-symbols-outlined text-[18px]">{activityIcon[log.type]}</span>
+          {auditLogs.length === 0 ? (
+            <p className="font-body-sm text-on-surface-variant py-md">
+              Nenhuma atividade registrada ainda.
+            </p>
+          ) : (
+            <div className="flex flex-col">
+              {auditLogs.slice(0, 6).map((log) => {
+                const colors = activityColor[log.statusColor] ?? activityColor.primary;
+                return (
+                  <div
+                    key={log.id}
+                    onClick={() => onNavigate('audit-logs')}
+                    className="flex items-center gap-md py-sm border-b border-outline-variant last:border-0 cursor-pointer hover:bg-surface-container-high/60 -mx-sm px-sm rounded-lg transition-colors"
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${colors.bg} ${colors.fg}`}>
+                      <span className="material-symbols-outlined text-[18px]">{activityIcon[log.type]}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-label-md text-on-surface truncate">{log.title}</p>
+                      <p className="font-body-sm text-on-surface-variant truncate">{log.details}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-xs shrink-0">
+                      <span className={`font-label-sm px-sm py-0.5 rounded-full ${colors.bg} ${colors.fg}`}>
+                        {log.type}
+                      </span>
+                      <span className="font-label-sm text-on-surface-variant">{log.timestamp}</span>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-label-md text-on-surface truncate">{log.title}</p>
-                    <p className="font-body-sm text-on-surface-variant truncate">{log.details}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-xs shrink-0">
-                    <span className={`font-label-sm px-sm py-0.5 rounded-full ${colors.bg} ${colors.fg}`}>
-                      {log.type}
-                    </span>
-                    <span className="font-label-sm text-on-surface-variant">{log.timestamp}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -45,7 +45,7 @@ export default function App() {
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(INITIAL_AUDIT_LOGS);
   const [alerts] = useState<AlertItem[]>(INITIAL_ALERTS);
   const [people, setPeople] = useState<Person[]>(() => {
-    const saved = localStorage.getItem('toolcontrol-people');
+    const saved = localStorage.getItem('toolcontrol-people-v2');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -128,7 +128,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('toolcontrol-people', JSON.stringify(people));
+    localStorage.setItem('toolcontrol-people-v2', JSON.stringify(people));
   }, [people]);
 
   // Toast Notification State
@@ -539,6 +539,9 @@ export default function App() {
           {currentPage === 'dashboard' && (
             <DashboardView
               currentUser={currentUser}
+              tools={tools}
+              mechanicBoxes={mechanicBoxes}
+              people={people}
               onNavigate={setCurrentPage}
               auditLogs={auditLogs}
               onOpenScanner={() => setShowScanner(true)}
