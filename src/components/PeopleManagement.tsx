@@ -41,7 +41,7 @@ export const PeopleManagement: React.FC<PeopleManagementProps> = ({
 
   return (
     <div className="bg-surface-container rounded-xl p-lg border border-outline-variant/30 max-w-3xl">
-      <div className="flex items-center justify-between mb-md">
+      <div className="flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between mb-md">
         <div>
           <h2 className="font-headline-sm text-on-surface">Pessoas e usuários</h2>
           <p className="font-label-sm text-on-surface-variant mt-xs">

@@ -10,6 +10,7 @@ import {
 } from './data/initialData';
 
 import { Sidebar } from './components/Sidebar';
+import { MobileNav } from './components/MobileNav';
 import { Header } from './components/Header';
 import { SplashScreen } from './components/SplashScreen';
 import { LockScreen } from './components/LockScreen';
@@ -471,48 +472,124 @@ export default function App() {
     );
   }
 
+  const isAdmin = currentUser.role === 'Administrador';
+
+  // View router — shared between the web (sidebar) and native/APK (bottom nav) shells.
+  const pageContent = (
+    <>
+      {currentPage === 'dashboard' && (
+        <DashboardView
+          currentUser={currentUser}
+          tools={tools}
+          mechanicBoxes={mechanicBoxes}
+          people={people}
+          onNavigate={setCurrentPage}
+          auditLogs={auditLogs}
+          onOpenScanner={() => setShowScanner(true)}
+        />
+      )}
+
+      {currentPage === 'estoque' && (
+        <EstoqueView
+          tools={tools}
+          onAddTool={handleAddTool}
+          onUpdateToolStatus={handleUpdateToolStatus}
+          onDeleteTool={handleDeleteTool}
+          isAdmin={isAdmin}
+        />
+      )}
+
+      {currentPage === 'tool-requests' && (
+        <ToolRequestsView
+          tools={tools}
+          mechanicNames={people.filter((p) => p.active).map((p) => p.name)}
+          onRequestTools={handleRequestTools}
+          isAdmin={isAdmin}
+          onAddTool={handleAddTool}
+          onDeleteTool={handleDeleteTool}
+          onAddPerson={handleAddPerson}
+        />
+      )}
+
+      {currentPage === 'mechanic-boxes' && (
+        <MechanicBoxesView
+          boxes={mechanicBoxes}
+          onAuditBox={handleAuditBox}
+          onRegisterBox={handleRegisterBox}
+        />
+      )}
+
+      {currentPage === 'damage-loss' && (
+        <DamageLossView
+          tools={tools}
+          onReportIncident={handleReportIncident}
+        />
+      )}
+
+      {currentPage === 'audit-logs' && (
+        <AuditLogsView logs={auditLogs} />
+      )}
+
+      {currentPage === 'settings' && (
+        <SettingsView
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={() => setIsDarkMode((prev) => !prev)}
+          people={people}
+          onAddPerson={handleAddPerson}
+          onUpdatePerson={handleUpdatePerson}
+          onTogglePersonActive={handleTogglePersonActive}
+          onDeletePerson={handleDeletePerson}
+          isAdmin={isAdmin}
+        />
+      )}
+    </>
+  );
+
+  const toastOverlay = toastMessage && (
+    <div className="fixed bottom-6 right-6 z-50 bg-primary-container border border-primary text-on-primary-container px-lg py-md rounded-xl shadow-2xl font-label-md flex items-center gap-md animate-in slide-in-from-bottom-5">
+      <span className="material-symbols-outlined text-primary text-[22px]">info</span>
+      <span>{toastMessage}</span>
+    </div>
+  );
+
   if (Capacitor.isNativePlatform()) {
     return (
       <div className="min-h-screen bg-background text-on-background font-body-md flex flex-col">
-        {toastMessage && (
-          <div className="fixed bottom-6 right-6 z-50 bg-primary-container border border-primary text-on-primary-container px-lg py-md rounded-xl shadow-2xl font-label-md flex items-center gap-md animate-in slide-in-from-bottom-5">
-            <span className="material-symbols-outlined text-primary text-[22px]">info</span>
-            <span>{toastMessage}</span>
-          </div>
-        )}
+        {toastOverlay}
 
         <Header
           alerts={alerts}
-          onNavigateToAlert={() => {}}
+          onNavigateToAlert={handleNavigateToAlert}
           currentUser={currentUser}
           onLock={handleLock}
           fullWidth
         />
 
-        <main className="relative pt-16 w-full flex-1">
-          <ToolRequestsView
-            tools={tools}
-            mechanicNames={people.filter((p) => p.active).map((p) => p.name)}
-            onRequestTools={handleRequestTools}
-            isAdmin={currentUser.role === 'Administrador'}
-            onAddTool={handleAddTool}
-            onDeleteTool={handleDeleteTool}
-            onAddPerson={handleAddPerson}
-          />
+        <main className="relative pt-16 pb-20 w-full flex-1">
+          {pageContent}
         </main>
+
+        <MobileNav
+          currentPage={currentPage}
+          onPageChange={(page) => {
+            setCurrentPage(page);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+
+        {showScanner && (
+          <QRScannerModal
+            onClose={() => setShowScanner(false)}
+            onScanResult={handleScanResult}
+          />
+        )}
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background text-on-background font-body-md flex">
-      {/* Toast Overlay */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-primary-container border border-primary text-on-primary-container px-lg py-md rounded-xl shadow-2xl font-label-md flex items-center gap-md animate-in slide-in-from-bottom-5">
-          <span className="material-symbols-outlined text-primary text-[22px]">info</span>
-          <span>{toastMessage}</span>
-        </div>
-      )}
+      {toastOverlay}
 
       {/* Sidebar Navigation */}
       <Sidebar
@@ -536,67 +613,7 @@ export default function App() {
 
         {/* View Router */}
         <main className="relative pt-16 w-full flex-1">
-          {currentPage === 'dashboard' && (
-            <DashboardView
-              currentUser={currentUser}
-              tools={tools}
-              mechanicBoxes={mechanicBoxes}
-              people={people}
-              onNavigate={setCurrentPage}
-              auditLogs={auditLogs}
-              onOpenScanner={() => setShowScanner(true)}
-            />
-          )}
-
-          {currentPage === 'estoque' && (
-            <EstoqueView
-              tools={tools}
-              onAddTool={handleAddTool}
-              onUpdateToolStatus={handleUpdateToolStatus}
-              onDeleteTool={handleDeleteTool}
-              isAdmin={currentUser.role === 'Administrador'}
-            />
-          )}
-
-          {currentPage === 'tool-requests' && (
-            <ToolRequestsView
-              tools={tools}
-              mechanicNames={people.filter((p) => p.active).map((p) => p.name)}
-              onRequestTools={handleRequestTools}
-            />
-          )}
-
-          {currentPage === 'mechanic-boxes' && (
-            <MechanicBoxesView
-              boxes={mechanicBoxes}
-              onAuditBox={handleAuditBox}
-              onRegisterBox={handleRegisterBox}
-            />
-          )}
-
-          {currentPage === 'damage-loss' && (
-            <DamageLossView
-              tools={tools}
-              onReportIncident={handleReportIncident}
-            />
-          )}
-
-          {currentPage === 'audit-logs' && (
-            <AuditLogsView logs={auditLogs} />
-          )}
-
-          {currentPage === 'settings' && (
-            <SettingsView
-              isDarkMode={isDarkMode}
-              onToggleDarkMode={() => setIsDarkMode((prev) => !prev)}
-              people={people}
-              onAddPerson={handleAddPerson}
-              onUpdatePerson={handleUpdatePerson}
-              onTogglePersonActive={handleTogglePersonActive}
-              onDeletePerson={handleDeletePerson}
-              isAdmin={currentUser.role === 'Administrador'}
-            />
-          )}
+          {pageContent}
         </main>
       </div>
 

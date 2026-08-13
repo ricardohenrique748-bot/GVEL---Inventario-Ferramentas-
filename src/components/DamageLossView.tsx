@@ -28,7 +28,7 @@ export const DamageLossView: React.FC<DamageLossViewProps> = ({
 
   return (
     <div className="flex flex-col w-full p-lg gap-lg select-none animate-in fade-in duration-300">
-      <div className="flex justify-between items-center mb-md">
+      <div className="flex flex-col gap-md sm:flex-row sm:justify-between sm:items-center mb-md">
         <div>
           <h1 className="font-headline-lg text-headline-lg text-on-background">
             Relatórios de Danos e Perdas

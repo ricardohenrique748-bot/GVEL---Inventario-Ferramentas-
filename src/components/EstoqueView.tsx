@@ -82,14 +82,14 @@ export const EstoqueView: React.FC<EstoqueViewProps> = ({
   return (
     <div className="flex flex-col w-full h-full pb-xl select-none animate-in fade-in duration-300">
       {/* Top Header & Actions */}
-      <div className="px-lg flex items-center justify-between mb-lg pt-lg">
+      <div className="px-lg flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between mb-lg pt-lg">
         <div className="flex flex-col">
           <h1 className="font-headline-lg text-on-background">Estoque</h1>
           <p className="font-body-sm text-on-surface-variant mt-xs">
             Cadastre e acompanhe todas as ferramentas disponíveis na oficina.
           </p>
         </div>
-        <div className="flex items-center gap-sm">
+        <div className="flex flex-wrap items-center gap-sm">
           <button
             onClick={handleExportCSV}
             className="flex items-center gap-sm px-md py-sm rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface transition-colors font-label-md"

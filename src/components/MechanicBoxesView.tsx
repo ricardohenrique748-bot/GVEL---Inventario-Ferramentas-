@@ -102,7 +102,7 @@ export const MechanicBoxesView: React.FC<MechanicBoxesViewProps> = ({
   return (
     <div className="flex flex-col w-full px-xl py-lg select-none animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex justify-between items-end mb-xl">
+      <div className="flex flex-col gap-md sm:flex-row sm:justify-between sm:items-end mb-xl">
         <div>
           <h1 className="font-display-lg text-display-lg text-on-background tracking-tight">
             Caixas dos Mecânicos
@@ -162,9 +162,11 @@ export const MechanicBoxesView: React.FC<MechanicBoxesViewProps> = ({
               caixas afetadas
             </span>
           </div>
-          <p className="font-label-md text-label-md text-error mt-sm flex items-center gap-xs">
-            <span className="material-symbols-outlined text-[16px]">trending_up</span> +3 desde o último turno
-          </p>
+          {boxes.length === 0 && (
+            <p className="font-label-md text-label-md text-on-surface-variant mt-sm">
+              Nenhuma caixa cadastrada ainda.
+            </p>
+          )}
         </div>
       </div>
 
@@ -200,6 +202,14 @@ export const MechanicBoxesView: React.FC<MechanicBoxesViewProps> = ({
       </div>
 
       {/* Mechanic Box Cards Grid */}
+      {filteredBoxes.length === 0 ? (
+        <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 py-2xl flex flex-col items-center justify-center gap-sm">
+          <span className="material-symbols-outlined text-on-surface-variant text-[32px]">handyman</span>
+          <span className="font-body-md text-on-surface-variant">
+            Nenhuma caixa encontrada com os filtros atuais.
+          </span>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter pb-xl">
         {filteredBoxes.map((box) => {
           const isComplete = box.status === 'complete';
@@ -304,6 +314,7 @@ export const MechanicBoxesView: React.FC<MechanicBoxesViewProps> = ({
           );
         })}
       </div>
+      )}
 
       {/* Modal: Quick Audit Drawer */}
       {activeAuditBox && (
