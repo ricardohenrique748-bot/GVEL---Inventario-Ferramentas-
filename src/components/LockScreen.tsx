@@ -24,6 +24,11 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
   const [facialStatus, setFacialStatus] = useState<string | null>(null);
   const [matchedName, setMatchedName] = useState<string | null>(null);
 
+  // On native, the screen defaults to facial recognition but can fall back
+  // to e-mail/senha — needed the first time the app runs, before anyone has
+  // a photo registered to match against.
+  const [nativeAuthMode, setNativeAuthMode] = useState<'facial' | 'email'>('facial');
+
   // Web email/password login state
   const [loginEmail, setLoginEmail] = useState(() => localStorage.getItem(REMEMBERED_EMAIL_KEY) || '');
   const [loginPassword, setLoginPassword] = useState('');
@@ -362,6 +367,14 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
               </button>
             )}
 
+            <button
+              type="button"
+              onClick={() => setNativeAuthMode('email')}
+              className="w-full py-2 text-white/50 hover:text-white/80 text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-[16px]">mail</span>
+              Entrar com e-mail e senha
+            </button>
           </div>
         </div>
       </div>
@@ -461,6 +474,17 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
             <span className="material-symbols-outlined text-[20px]">login</span>
             Entrar
           </button>
+
+          {isNative && (
+            <button
+              type="button"
+              onClick={() => setNativeAuthMode('facial')}
+              className="w-full py-2 text-white/50 hover:text-white/80 text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-[16px]">face</span>
+              Usar reconhecimento facial
+            </button>
+          )}
         </form>
       </div>
 
@@ -471,7 +495,9 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
     </>
   );
 
-  const authContent = isNative ? facialAuthContent : emailAuthContent;
+  const authContent = isNative
+    ? (nativeAuthMode === 'facial' ? facialAuthContent : emailAuthContent)
+    : emailAuthContent;
 
   // Native (APK/Android): full-bleed on phones so the auth panel fills the
   // whole screen instead of floating as a small card with dead space around
