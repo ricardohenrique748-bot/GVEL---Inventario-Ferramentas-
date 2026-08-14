@@ -5,7 +5,6 @@ import {
   INITIAL_TOOLS,
   INITIAL_MECHANIC_BOXES,
   INITIAL_AUDIT_LOGS,
-  INITIAL_ALERTS,
   INITIAL_PEOPLE,
   INITIAL_CATEGORIES,
 } from './data/initialData';
@@ -45,7 +44,20 @@ export default function App() {
   const [tools, setTools] = useState<ToolItem[]>(INITIAL_TOOLS);
   const [mechanicBoxes, setMechanicBoxes] = useState<MechanicBox[]>(INITIAL_MECHANIC_BOXES);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(INITIAL_AUDIT_LOGS);
-  const [alerts] = useState<AlertItem[]>(INITIAL_ALERTS);
+
+  // Derived from incomplete mechanic boxes — not separate state, so it always
+  // reflects the current box statuses instead of going stale.
+  const alerts: AlertItem[] = mechanicBoxes
+    .filter((b) => b.status === 'incomplete')
+    .map((b) => ({
+      id: `alert-${b.id}`,
+      title: `Caixa ${b.boxNumber} incompleta`,
+      subtitle: `${b.mechanicName} • ${b.missingCount} ${b.missingCount === 1 ? 'item faltando' : 'itens faltando'}`,
+      level: b.missingCount > 3 ? 'HIGH' : 'MED',
+      timestamp: b.lastAudit,
+      type: 'incomplete_box',
+    }));
+
   const [people, setPeople] = useState<Person[]>(() => {
     const saved = localStorage.getItem('toolcontrol-people-v2');
     if (saved) {
@@ -526,76 +538,6 @@ export default function App() {
     setCurrentPage('mechanic-boxes');
   };
 
-  const handleRegisterFace = async (data: {
-    name: string;
-    role: string;
-    email: string;
-    password: string;
-    photoUrl: string;
-  }) => {
-    const emailLower = data.email.toLowerCase();
-    const existing = people.find((p) => p.email.toLowerCase() === emailLower);
-
-    if (existing) {
-      setPeople((prev) =>
-        prev.map((p) =>
-          p.id === existing.id ? { ...p, photoUrl: data.photoUrl, name: data.name, role: data.role || p.role } : p
-        )
-      );
-      try {
-        await supabase
-          .from('people')
-          .update({ photo_url: data.photoUrl, name: data.name, role: data.role || existing.role })
-          .eq('id', existing.id);
-      } catch (e) {
-        // fallback to local state
-      }
-      showToast(`Biometria facial atualizada para ${data.name}!`);
-      return;
-    }
-
-    const usernameBase = emailLower.split('@')[0].replace(/[^a-z0-9._-]/g, '') || `user${Date.now()}`;
-    let username = usernameBase;
-    let suffix = 1;
-    while (people.some((p) => p.username.toLowerCase() === username.toLowerCase())) {
-      username = `${usernameBase}${suffix++}`;
-    }
-
-    const newPerson: Person = {
-      id: `p-${Date.now()}`,
-      name: data.name,
-      registration: '',
-      role: data.role || 'Colaborador',
-      sector: '',
-      username,
-      email: data.email,
-      password: data.password,
-      active: true,
-      photoUrl: data.photoUrl,
-    };
-
-    setPeople((prev) => [newPerson, ...prev]);
-
-    try {
-      await supabase.from('people').insert({
-        id: newPerson.id,
-        name: newPerson.name,
-        registration: newPerson.registration,
-        role: newPerson.role,
-        sector: newPerson.sector,
-        username: newPerson.username,
-        email: newPerson.email,
-        password: newPerson.password,
-        active: newPerson.active,
-        photo_url: newPerson.photoUrl,
-      });
-    } catch (e) {
-      // fallback to local state
-    }
-
-    showToast(`Biometria facial cadastrada para ${newPerson.name}!`);
-  };
-
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
@@ -604,7 +546,6 @@ export default function App() {
     return (
       <LockScreen
         people={people}
-        onRegisterFace={handleRegisterFace}
         onUnlock={(user) => {
           setCurrentUser(user);
           setCurrentPage('tool-requests');
@@ -705,6 +646,7 @@ export default function App() {
 
         <Header
           alerts={alerts}
+          auditLogs={auditLogs}
           onNavigateToAlert={handleNavigateToAlert}
           currentUser={currentUser}
           onLock={handleLock}
@@ -752,6 +694,7 @@ export default function App() {
         {/* Top Header */}
         <Header
           alerts={alerts}
+          auditLogs={auditLogs}
           onNavigateToAlert={handleNavigateToAlert}
           currentUser={currentUser}
           onLock={handleLock}

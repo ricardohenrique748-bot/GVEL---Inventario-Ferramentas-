@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { AlertItem, Person } from '../types';
+import { AlertItem, AuditLogItem, Person } from '../types';
 import { LEVEL_LABELS } from '../labels';
 
 interface HeaderProps {
   alerts: AlertItem[];
+  auditLogs: AuditLogItem[];
   onNavigateToAlert: (type: string) => void;
   currentUser: Person;
   onLock: () => void;
@@ -12,11 +13,13 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   alerts,
+  auditLogs,
   onNavigateToAlert,
   currentUser,
   onLock,
   fullWidth,
 }) => {
+  const recentLogs = auditLogs.slice(0, 5);
   const [showAlertsMenu, setShowAlertsMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -98,7 +101,9 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Notifications"
               >
                 <span className="material-symbols-outlined text-[20px]">notifications</span>
-                <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-primary" />
+                {recentLogs.length > 0 && (
+                  <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-primary" />
+                )}
               </button>
 
               {showNotifications && (
@@ -107,9 +112,17 @@ export const Header: React.FC<HeaderProps> = ({
                     <span className="font-headline-sm text-on-surface text-[15px]">Notificações</span>
                     <button onClick={() => setShowNotifications(false)} className="text-on-surface-variant text-xs">Fechar</button>
                   </div>
-                  <div className="space-y-sm font-body-sm text-on-surface-variant">
-                    <p className="p-sm bg-surface-container-high rounded-lg">Inspeção da Caixa-042 solicitada por Vance.</p>
-                    <p className="p-sm bg-surface-container-high rounded-lg">Compressor de Ar AC-102 aguardando avaliação de dano.</p>
+                  <div className="space-y-sm font-body-sm text-on-surface-variant max-h-72 overflow-y-auto">
+                    {recentLogs.length === 0 ? (
+                      <p className="p-sm text-on-surface-variant/70">Nenhuma notificação recente.</p>
+                    ) : (
+                      recentLogs.map((log) => (
+                        <div key={log.id} className="p-sm bg-surface-container-high rounded-lg">
+                          <p className="text-on-surface font-label-sm">{log.title}</p>
+                          <p className="mt-0.5">{log.details}</p>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               )}

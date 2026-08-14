@@ -3,20 +3,10 @@ import * as faceapi from 'face-api.js';
 import { Capacitor } from '@capacitor/core';
 import { Person } from '../types';
 import logo from '../assets/logo.png';
-import { CameraCapture } from './CameraCapture';
-
-export interface FaceEnrollmentData {
-  name: string;
-  role: string;
-  email: string;
-  password: string;
-  photoUrl: string;
-}
 
 interface LockScreenProps {
   people: Person[];
   onUnlock: (person: Person) => void;
-  onRegisterFace?: (data: FaceEnrollmentData) => void;
 }
 
 type ModelsState = 'idle' | 'loading' | 'ready' | 'error';
@@ -27,21 +17,12 @@ const MODEL_URL = '/models/';
 const MATCH_THRESHOLD = 0.55;
 const DETECTOR_OPTIONS = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
 
-export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegisterFace }) => {
+export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
   // Facial tab state
   const [modelsState, setModelsState] = useState<ModelsState>('idle');
   const [isScanning, setIsScanning] = useState(false);
   const [facialStatus, setFacialStatus] = useState<string | null>(null);
   const [matchedName, setMatchedName] = useState<string | null>(null);
-
-  // Facial Enrollment Modal State
-  const [showEnrollModal, setShowEnrollModal] = useState(false);
-  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
-  const [enrollName, setEnrollName] = useState('');
-  const [enrollRole, setEnrollRole] = useState('');
-  const [enrollEmail, setEnrollEmail] = useState('');
-  const [enrollPassword, setEnrollPassword] = useState('');
-  const [enrollShowPass, setEnrollShowPass] = useState(false);
 
   // Web email/password login state
   const [loginEmail, setLoginEmail] = useState(() => localStorage.getItem(REMEMBERED_EMAIL_KEY) || '');
@@ -187,7 +168,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
   const startFacialScan = async () => {
 
     if (enrolledPeople.length === 0) {
-      setFacialStatus('Nenhuma biometria cadastrada ainda. Clique no botão "Cadastrar biometria facial" abaixo.');
+      setFacialStatus('Nenhuma biometria cadastrada ainda. Peça a um administrador para cadastrar sua foto após entrar no sistema.');
       return;
     }
 
@@ -201,7 +182,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
     setFacialStatus('Preparando reconhecimento facial...');
     await buildMatcher();
     if (!matcherRef.current) {
-      setFacialStatus('Rosto cadastrado não detectado na foto. Clique em "Cadastrar biometria facial" para atualizar sua foto.');
+      setFacialStatus('Rosto cadastrado não detectado na foto. Peça a um administrador para atualizar sua foto no sistema.');
       return;
     }
 
@@ -381,22 +362,6 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
               </button>
             )}
 
-            {/* Enrollment button always visible */}
-            <button
-              type="button"
-              onClick={() => {
-                setCapturedPhoto(null);
-                setEnrollName('');
-                setEnrollRole('');
-                setEnrollEmail('');
-                setEnrollPassword('');
-                setShowEnrollModal(true);
-              }}
-              className="w-full py-3.5 px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-white text-sm font-semibold transition-all border border-white/10 active:scale-[0.99] flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined text-[20px] text-red-500">add_a_photo</span>
-              Cadastrar Biometria Facial
-            </button>
           </div>
         </div>
       </div>
@@ -508,171 +473,6 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
 
   const authContent = isNative ? facialAuthContent : emailAuthContent;
 
-  const enrollmentModal = (
-    <>
-      {showEnrollModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <div className="bg-[#181818] w-full sm:max-w-[28rem] rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6 sm:zoom-in-95 max-h-[92vh] overflow-y-auto">
-              {/* Header */}
-              <div className="relative flex items-center justify-center pt-5 pb-3.5 px-5 border-b border-white/10 bg-white/[0.02]">
-                <div className="absolute left-5 w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
-                  <span className="material-symbols-outlined text-[18px]">face</span>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] text-white/40 uppercase tracking-widest font-semibold">Novo Cadastro</p>
-                  <h3 className="text-white text-base font-bold">Biometria Facial</h3>
-                </div>
-                <button
-                  onClick={() => setShowEnrollModal(false)}
-                  className="absolute right-5 w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/60 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
-                </button>
-              </div>
-
-              <div className="p-5 flex flex-col gap-4">
-                {/* Camera capture centered */}
-                <div className="flex flex-col items-center gap-3">
-                  <div className="relative">
-                    <div className={`w-36 h-36 rounded-2xl overflow-hidden border-2 transition-all ${capturedPhoto ? 'border-red-500 shadow-lg shadow-red-500/20' : 'border-dashed border-white/20'} bg-white/5 flex items-center justify-center`}>
-                      {capturedPhoto ? (
-                        <img src={capturedPhoto} alt="Foto facial" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="flex flex-col items-center gap-1.5">
-                          <span className="material-symbols-outlined text-white/20 text-[40px]">face_4</span>
-                          <p className="text-white/30 text-[10px] text-center px-2">Toque para fotografar</p>
-                        </div>
-                      )}
-                    </div>
-                    {capturedPhoto && (
-                      <button
-                        type="button"
-                        onClick={() => setCapturedPhoto(null)}
-                        className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center shadow-md text-white"
-                      >
-                        <span className="material-symbols-outlined text-[13px]">close</span>
-                      </button>
-                    )}
-                  </div>
-                  <CameraCapture
-                    value={capturedPhoto}
-                    onCapture={(url) => setCapturedPhoto(url)}
-                    onClear={() => setCapturedPhoto(null)}
-                    size={0}
-                  />
-                  {capturedPhoto ? (
-                    <p className="text-xs text-red-400 font-semibold flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">check_circle</span> Rosto capturado
-                    </p>
-                  ) : (
-                    <p className="text-xs text-white/40 text-center">A foto do rosto é obrigatória para a biometria</p>
-                  )}
-                </div>
-
-                {/* User fields - all optional */}
-                <div className="flex flex-col gap-2.5">
-                  {/* Name */}
-                  <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-red-500/60 transition-colors">
-                    <span className="material-symbols-outlined text-white/30 text-[18px]">person</span>
-                    <input
-                      type="text"
-                      placeholder="Nome completo"
-                      value={enrollName}
-                      onChange={(e) => setEnrollName(e.target.value)}
-                      className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
-                    />
-                  </div>
-
-                  {/* Função / Role */}
-                  <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-red-500/60 transition-colors">
-                    <span className="material-symbols-outlined text-white/30 text-[18px]">badge</span>
-                    <input
-                      type="text"
-                      placeholder="Função (ex: Mecânico, Supervisor) (opcional)"
-                      value={enrollRole}
-                      onChange={(e) => setEnrollRole(e.target.value)}
-                      className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
-                    />
-                  </div>
-
-                  {/* Email */}
-                  <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-red-500/60 transition-colors">
-                    <span className="material-symbols-outlined text-white/30 text-[18px]">mail</span>
-                    <input
-                      type="email"
-                      placeholder="E-mail"
-                      value={enrollEmail}
-                      onChange={(e) => setEnrollEmail(e.target.value)}
-                      className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
-                    />
-                  </div>
-
-                  {/* Password */}
-                  <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3 border border-white/10 focus-within:border-red-500/60 transition-colors">
-                    <span className="material-symbols-outlined text-white/30 text-[18px]">lock</span>
-                    <input
-                      type={enrollShowPass ? 'text' : 'password'}
-                      placeholder="Senha"
-                      value={enrollPassword}
-                      onChange={(e) => setEnrollPassword(e.target.value)}
-                      className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/25"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setEnrollShowPass(!enrollShowPass)}
-                      className="text-white/30 hover:text-white/60 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        {enrollShowPass ? 'visibility_off' : 'visibility'}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex gap-2.5 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowEnrollModal(false)}
-                    className="flex-1 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white/70 text-sm font-semibold transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!capturedPhoto || !enrollName.trim() || !enrollEmail.trim() || !enrollPassword.trim()}
-                    onClick={() => {
-                      if (!capturedPhoto || !enrollName.trim() || !enrollEmail.trim() || !enrollPassword.trim()) return;
-                      onRegisterFace?.({
-                        name: enrollName.trim(),
-                        role: enrollRole.trim(),
-                        email: enrollEmail.trim(),
-                        password: enrollPassword,
-                        photoUrl: capturedPhoto,
-                      });
-                      setShowEnrollModal(false);
-                      setCapturedPhoto(null);
-                      setFacialStatus(
-                        `Biometria cadastrada para ${enrollName.trim()}! Clique em Iniciar reconhecimento.`
-                      );
-                      setEnrollName('');
-                      setEnrollRole('');
-                      setEnrollEmail('');
-                      setEnrollPassword('');
-                    }}
-                    className="flex-[2] py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-red-600/20"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">face_unlock</span>
-                    Salvar Biometria
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-    </>
-  );
-
   // Native (APK/Android): mobile-app style centered card, unchanged from the original design.
   if (isNative) {
     return (
@@ -688,8 +488,6 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock, onRegi
           <div className="w-full lg:w-1/2 flex flex-col p-5 sm:p-8 md:p-10 justify-between box-border" style={{ width: '100%' }}>
             {authContent}
           </div>
-
-          {enrollmentModal}
 
           {/* Right: brand panel (shown on tablets landscape and desktops) */}
           <div className="hidden lg:flex lg:w-1/2 min-h-[500px] relative items-center justify-center overflow-hidden bg-gradient-to-br from-[#0a0a0a] via-[#160505] to-[#2a0808]">
