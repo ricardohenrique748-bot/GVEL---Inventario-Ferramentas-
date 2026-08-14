@@ -267,28 +267,28 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
   const facialAuthContent = (
     <>
       {/* Header Branding */}
-      <div className="flex flex-col items-center justify-center text-center gap-2 mb-4 sm:mb-6">
-        <div className="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-2.5 shadow-lg">
+      <div className="flex flex-col items-center justify-center text-center gap-3 mb-6 sm:mb-8">
+        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-3 shadow-lg">
           <img src={logo} alt="Inventario Ferramentas - GV" className="w-full h-full object-contain" />
         </div>
         <div className="mt-1">
-          <h2 className="text-white font-extrabold text-lg sm:text-xl tracking-tight">Inventario Ferramentas - GV</h2>
-          <span className="text-red-500 text-[10px] uppercase font-bold tracking-[3px] block">Sistema de Gestão Industrial</span>
+          <h2 className="text-white font-extrabold text-xl sm:text-2xl tracking-tight">Inventario Ferramentas - GV</h2>
+          <span className="text-red-500 text-xs uppercase font-bold tracking-[3px] block mt-1">Sistema de Gestão Industrial</span>
         </div>
       </div>
 
       <div className="flex-1 flex flex-col justify-center w-full mx-auto my-2 box-border">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight text-center tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight text-center tracking-tight">
           Reconhecimento Facial
         </h1>
-        <p className="text-xs sm:text-sm text-white/50 mt-1.5 mb-6 text-center">
+        <p className="text-sm sm:text-base text-white/50 mt-2 mb-8 text-center">
           Posicione o rosto em frente à câmera para acessar o sistema.
         </p>
 
-        <div className="flex flex-col items-center gap-5">
+        <div className="flex flex-col items-center gap-6">
           {/* Biometric Camera Viewfinder with Corner Brackets & Scanner HUD */}
           <div
-            className={`relative w-48 h-48 sm:w-56 sm:h-56 rounded-3xl bg-black/60 border-2 transition-all duration-300 flex items-center justify-center overflow-hidden shadow-2xl ${
+            className={`relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl bg-black/60 border-2 transition-all duration-300 flex items-center justify-center overflow-hidden shadow-2xl ${
               matchedName
                 ? 'border-emerald-500 shadow-emerald-500/20'
                 : isScanning
@@ -318,17 +318,17 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
             />
 
             {!isScanning && (
-              <div className="flex flex-col items-center gap-2 p-4 text-center z-10">
+              <div className="flex flex-col items-center gap-3 p-4 text-center z-10">
                 {matchedName ? (
-                  <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                    <span className="material-symbols-outlined text-[36px]">check_circle</span>
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                    <span className="material-symbols-outlined text-[42px]">check_circle</span>
                   </div>
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40">
-                    <span className="material-symbols-outlined text-[36px]">face</span>
+                  <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40">
+                    <span className="material-symbols-outlined text-[42px]">face</span>
                   </div>
                 )}
-                <span className="text-white/40 text-xs">
+                <span className="text-white/40 text-sm">
                   {matchedName ? matchedName : 'Aguardando câmera...'}
                 </span>
               </div>
@@ -337,7 +337,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
 
           {/* Status Message Display */}
           {facialStatus && (
-            <div className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm text-center font-medium w-full max-w-[20rem] transition-all ${
+            <div className={`px-5 py-3 rounded-xl text-sm sm:text-base text-center font-medium w-full max-w-[22rem] transition-all ${
               matchedName
                 ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold'
                 : isScanning
@@ -349,15 +349,15 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col w-full gap-3 mt-1">
+          <div className="flex flex-col w-full max-w-[22rem] gap-3 mt-1">
             {!isScanning && !matchedName && (
               <button
                 type="button"
                 onClick={startFacialScan}
                 disabled={modelsState === 'loading'}
-                className="w-full py-3.5 px-6 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-all shadow-lg shadow-red-600/25 active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-4 px-6 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-base font-bold transition-all shadow-lg shadow-red-600/25 active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined text-[20px]">videocam</span>
+                <span className="material-symbols-outlined text-[22px]">videocam</span>
                 {modelsState === 'loading' ? 'Carregando Modelos IA...' : 'Iniciar Reconhecimento'}
               </button>
             )}
@@ -367,7 +367,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
       </div>
 
       {/* Footer note */}
-      <p className="text-[11px] text-white/30 text-center max-w-[20rem] mx-auto mt-6">
+      <p className="text-xs text-white/30 text-center max-w-[22rem] mx-auto mt-6">
         Inventário de Ferramentas GVEL — Controle e segurança de ativos industriais.
       </p>
     </>
@@ -473,19 +473,21 @@ export const LockScreen: React.FC<LockScreenProps> = ({ people, onUnlock }) => {
 
   const authContent = isNative ? facialAuthContent : emailAuthContent;
 
-  // Native (APK/Android): mobile-app style centered card, unchanged from the original design.
+  // Native (APK/Android): full-bleed on phones so the auth panel fills the
+  // whole screen instead of floating as a small card with dead space around
+  // it; reverts to a centered card on tablets/desktop native shells (lg:).
   if (isNative) {
     return (
-      <div className="min-h-screen w-full flex flex-col justify-center items-stretch bg-[#0d0d0d] p-3 sm:p-6 md:p-8 box-border">
+      <div className="min-h-screen w-full flex flex-col bg-[#0d0d0d] lg:justify-center lg:p-8 box-border">
         {/* Background ambient lighting */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px]" />
           <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-red-900/10 rounded-full blur-[90px]" />
         </div>
 
-        <div className="relative z-10 w-full max-w-[28rem] lg:max-w-5xl mx-auto bg-[#141414] rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col lg:flex-row my-auto" style={{ width: '100%' }}>
+        <div className="relative z-10 w-full flex-1 flex flex-col lg:flex-none lg:flex-row lg:max-w-5xl lg:mx-auto lg:my-auto bg-[#0d0d0d] lg:bg-[#141414] lg:rounded-3xl lg:border lg:border-white/10 lg:shadow-2xl overflow-hidden">
           {/* Left: auth panel */}
-          <div className="w-full lg:w-1/2 flex flex-col p-5 sm:p-8 md:p-10 justify-between box-border" style={{ width: '100%' }}>
+          <div className="w-full flex-1 lg:w-1/2 lg:flex-none flex flex-col p-6 sm:p-8 lg:p-10 justify-between box-border">
             {authContent}
           </div>
 
